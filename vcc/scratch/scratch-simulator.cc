@@ -23,5 +23,5 @@ using namespace ns3;
 int 
 main (int argc, char *argv[])
 {
-  NS_LOG_UNCOND ("Scratch Simulator");
+  NS_LOG_UNCOND ("this is Simulator");
 }

@@ -35,6 +35,7 @@
 #include "ns3/net-device.h"
 #include "ns3/trace-source-accessor.h"
 #include <cmath>
+#include "wifi-mac-header.h"
 
 NS_LOG_COMPONENT_DEFINE ("YansWifiPhy");
 
@@ -461,7 +462,9 @@ YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
         {
           NS_LOG_DEBUG ("sync to signal (power=" << rxPowerW << "W)");
           // sync to signal
-          m_state->SwitchToRx (rxDuration);
+          WifiMacHeader hdr;
+          packet->PeekHeader(hdr);
+          m_state->SwitchToRx (rxDuration, hdr);
           NS_ASSERT (m_endRxEvent.IsExpired ());
           NotifyRxBegin (packet);
           m_interference.NotifyRxStart ();

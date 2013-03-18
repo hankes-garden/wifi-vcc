@@ -48,6 +48,23 @@ class WifiPhy;
 class WifiMac;
 class EdcaTxopN;
 
+class SnrTag : public Tag
+{
+public:
+  static TypeId GetTypeId (void);
+  virtual TypeId GetInstanceTypeId (void) const;
+
+  virtual uint32_t GetSerializedSize (void) const;
+  virtual void Serialize (TagBuffer i) const;
+  virtual void Deserialize (TagBuffer i);
+  virtual void Print (std::ostream &os) const;
+
+  void Set (double snr);
+  double Get (void) const;
+private:
+  double m_snr;
+};
+
 /**
  * \ingroup wifi
  * \brief listen to events coming from ns3::MacLow.
@@ -441,7 +458,7 @@ public:
    * Start the transmission of the input packet and notify the listener
    * of transmission events.
    */
-  void StartTransmission (Ptr<const Packet> packet,
+  virtual void StartTransmission (Ptr<const Packet> packet,
                           const WifiMacHeader* hdr,
                           MacLowTransmissionParameters parameters,
                           MacLowTransmissionListener *listener);
@@ -455,7 +472,7 @@ public:
    * This method is typically invoked by the lower PHY layer to notify
    * the MAC layer that a packet was successfully received.
    */
-  void ReceiveOk (Ptr<Packet> packet, double rxSnr, WifiMode txMode, WifiPreamble preamble);
+  virtual void ReceiveOk (Ptr<Packet> packet, double rxSnr, WifiMode txMode, WifiPreamble preamble);
   /**
    * \param packet packet received.
    * \param rxSnr snr of packet received.
@@ -507,7 +524,8 @@ public:
    * associated to this AC.
    */
   void RegisterBlockAckListenerForAc (enum AcIndex ac, MacLowBlockAckEventListener *listener);
-private:
+
+public:
   void CancelAllEvents (void);
   uint32_t GetAckSize (void) const;
   uint32_t GetBlockAckSize (enum BlockAckType type) const;
@@ -668,6 +686,17 @@ private:
 
   typedef std::map<AcIndex, MacLowBlockAckEventListener*> QueueListeners;
   QueueListeners m_edcaListeners;
+
+public:
+  virtual void NotifyRxStartNow(Time duration, WifiMacHeader hdr);
+  virtual void NotifyTxStartNow(Time duration, WifiMacHeader hdr);
+
+public:
+  Time m_lastRxStart;
+  Time m_lastRxDuration;
+
+  Time m_lastTxStart;
+  Time m_lastTxDuration;
 };
 
 } // namespace ns3

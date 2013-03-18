@@ -42,23 +42,6 @@ NS_LOG_COMPONENT_DEFINE ("MacLow");
 
 namespace ns3 {
 
-class SnrTag : public Tag
-{
-public:
-  static TypeId GetTypeId (void);
-  virtual TypeId GetInstanceTypeId (void) const;
-
-  virtual uint32_t GetSerializedSize (void) const;
-  virtual void Serialize (TagBuffer i) const;
-  virtual void Deserialize (TagBuffer i);
-  virtual void Print (std::ostream &os) const;
-
-  void Set (double snr);
-  double Get (void) const;
-private:
-  double m_snr;
-};
-
 TypeId
 SnrTag::GetTypeId (void)
 {
@@ -325,8 +308,9 @@ public:
   virtual ~PhyMacLowListener ()
   {
   }
-  virtual void NotifyRxStart (Time duration)
+  virtual void NotifyRxStart (Time duration, WifiMacHeader hdr)
   {
+	  m_macLow->NotifyRxStartNow(duration, hdr);
   }
   virtual void NotifyRxEndOk (void)
   {
@@ -334,8 +318,9 @@ public:
   virtual void NotifyRxEndError (void)
   {
   }
-  virtual void NotifyTxStart (Time duration)
+  virtual void NotifyTxStart (Time duration, WifiMacHeader hdr)
   {
+	  m_macLow->NotifyTxStartNow(duration, hdr);
   }
   virtual void NotifyMaybeCcaBusyStart (Time duration)
   {
@@ -1857,6 +1842,18 @@ void
 MacLow::RegisterBlockAckListenerForAc (enum AcIndex ac, MacLowBlockAckEventListener *listener)
 {
   m_edcaListeners.insert (std::make_pair (ac, listener));
+}
+
+void MacLow::NotifyRxStartNow(Time duration, WifiMacHeader hdr)
+{
+	m_lastRxStart = Simulator::Now();
+	m_lastRxDuration = duration + hdr.GetDuration();
+}
+
+void MacLow::NotifyTxStartNow(Time duration, WifiMacHeader hdr)
+{
+	m_lastTxStart = Simulator::Now();
+	m_lastTxDuration = duration + hdr.GetDuration();
 }
 
 } // namespace ns3

@@ -108,7 +108,7 @@ DcfState::UpdateBackoffSlotsNow (uint32_t nSlots, Time backoffUpdateBound)
 void
 DcfState::StartBackoffNow (uint32_t nSlots)
 {
-  NS_ASSERT (m_backoffSlots == 0);
+  //NS_ASSERT (m_backoffSlots == 0);
   MY_DEBUG ("start backoff=" << nSlots << " slots");
   m_backoffSlots = nSlots;
   m_backoffStart = Simulator::Now ();
@@ -219,7 +219,7 @@ public:
   virtual ~PhyListener ()
   {
   }
-  virtual void NotifyRxStart (Time duration)
+  virtual void NotifyRxStart (Time duration, WifiMacHeader hdr)
   {
     m_dcf->NotifyRxStartNow (duration);
   }
@@ -231,7 +231,7 @@ public:
   {
     m_dcf->NotifyRxEndErrorNow ();
   }
-  virtual void NotifyTxStart (Time duration)
+  virtual void NotifyTxStart (Time duration, WifiMacHeader hdr)
   {
     m_dcf->NotifyTxStartNow (duration);
   }
@@ -620,6 +620,11 @@ DcfManager::NotifyTxStartNow (Time duration)
       //this may be caused only if PHY has started to receive a packet
       //inside SIFS, so, we check that lastRxStart was maximum a SIFS
       //ago
+	  NS_LOG_ERROR("now: "<<Simulator::Now()
+	  <<", lastRxEnd:" << m_lastRxEnd
+	  <<", lastRxStart:" << m_lastRxStart
+	  <<", lastRxDuration:" << m_lastRxDuration);
+
       NS_ASSERT (Simulator::Now () - m_lastRxStart <= m_sifs);
       m_lastRxEnd = Simulator::Now ();
       m_lastRxDuration = m_lastRxEnd - m_lastRxStart;

@@ -23,6 +23,7 @@
 #include "wifi-phy.h"
 #include "ns3/traced-callback.h"
 #include "ns3/object.h"
+#include "ns3/wifi-mac-header.h"
 #include <vector>
 
 namespace ns3 {
@@ -54,7 +55,7 @@ public:
   Time GetLastRxStartTime (void) const;
 
   void SwitchToTx (Time txDuration, Ptr<const Packet> packet, WifiMode txMode, WifiPreamble preamble, uint8_t txPower);
-  void SwitchToRx (Time rxDuration);
+  void SwitchToRx (Time rxDuration, WifiMacHeader hdr);
   void SwitchToChannelSwitching (Time switchingDuration);
   void SwitchFromRxEndOk (Ptr<Packet> packet, double snr, WifiMode mode, enum WifiPreamble preamble);
   void SwitchFromRxEndError (Ptr<const Packet> packet, double snr);
@@ -66,9 +67,9 @@ private:
 
   void LogPreviousIdleAndCcaBusyStates (void);
 
-  void NotifyTxStart (Time duration);
+  void NotifyTxStart (Time duration, WifiMacHeader hdr);
   void NotifyWakeup (void);
-  void NotifyRxStart (Time duration);
+  void NotifyRxStart (Time duration, WifiMacHeader hdr);
   void NotifyRxEndOk (void);
   void NotifyRxEndError (void);
   void NotifyMaybeCcaBusyStart (Time duration);

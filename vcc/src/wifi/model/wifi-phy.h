@@ -30,6 +30,7 @@
 #include "wifi-mode.h"
 #include "wifi-preamble.h"
 #include "wifi-phy-standard.h"
+#include "wifi-mac-header.h"
 #include "ns3/traced-callback.h"
 
 
@@ -58,7 +59,7 @@ public:
    *   - NotifyRxEndError
    *   - NotifyTxStart
    */
-  virtual void NotifyRxStart (Time duration) = 0;
+  virtual void NotifyRxStart (Time duration, WifiMacHeader hdr) = 0;
   /**
    * We have received the last bit of a packet for which
    * NotifyRxStart was invoked first and, the packet has
@@ -80,7 +81,7 @@ public:
    * channel implicitely reverts to the idle state
    * unless they have received a cca busy report.
    */
-  virtual void NotifyTxStart (Time duration) = 0;
+  virtual void NotifyTxStart (Time duration, WifiMacHeader hdr) = 0;
 
   /**
    * \param duration the expected busy duration.
