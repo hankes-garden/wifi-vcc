@@ -688,7 +688,7 @@ public:
   QueueListeners m_edcaListeners;
 
 public:
-  virtual void NotifyRxStartNow(Time duration, WifiMacHeader hdr);
+  virtual void NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet);
   virtual void NotifyTxStartNow(Time duration, WifiMacHeader hdr);
 
 public:

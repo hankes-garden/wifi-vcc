@@ -163,7 +163,7 @@ void DataDcaTxop::DoDispose(void)
 	m_rng = 0;
 	m_txMiddle = 0;
 
-		m_bRequestAccessSucceeded = false;
+	m_bRequestAccessSucceeded = false;
 }
 
 void DataDcaTxop::SetManager(DcfManager *manager)
@@ -236,9 +236,12 @@ void DataDcaTxop::Queue(Ptr<const Packet> packet, const WifiMacHeader &hdr)
 {
 	NS_LOG_FUNCTION (this << packet << &hdr);
 
-	NS_LOG_ERROR("Data Channel enqueue, uid="<<packet->GetUid()
-			<<", dst="<<hdr.GetAddr1()
-			<<", size="<<packet->GetSize());
+	if(NeedRts(packet, &hdr) )
+	{
+		NS_LOG_ERROR("Data Channel enqueue, uid="<<packet->GetUid()
+					<<", dst="<<hdr.GetAddr1()
+					<<", size="<<packet->GetSize());
+	}
 
 	WifiMacTrailer fcs;
 	uint32_t fullPacketSize = hdr.GetSerializedSize() + packet->GetSize()
@@ -261,7 +264,7 @@ void DataDcaTxop::RestartAccessIfNeeded(void)
 {
 	NS_LOG_FUNCTION (this);
 
-	if (m_currentPacket == 0 && m_bRequestAccessSucceeded)// already got a plan for current packet
+	if (m_currentPacket == 0 && m_bRequestAccessSucceeded) // already got a plan for current packet
 	{
 		// do nothing since we have already arranged sending for next packet
 		NS_LOG_ERROR("already arranged sending for next packet");
@@ -270,7 +273,7 @@ void DataDcaTxop::RestartAccessIfNeeded(void)
 
 	// Normal DCF
 	if ((m_currentPacket != 0 || !m_queue->IsEmpty())
-			&& !m_dcf->IsAccessRequested() )
+			&& !m_dcf->IsAccessRequested())
 	{
 		m_manager->RequestAccess(m_dcf);
 	}
@@ -287,7 +290,7 @@ void DataDcaTxop::StartAccessIfNeeded(void)
 {
 	NS_LOG_FUNCTION (this);
 
-	if(m_currentPacket == 0 && m_bRequestAccessSucceeded) // already got a plan for current packet
+	if (m_currentPacket == 0 && m_bRequestAccessSucceeded) // already got a plan for current packet
 	{
 		// do nothing since we have already arranged sending for next packet
 		NS_LOG_ERROR("already got a plan for next packet");
@@ -662,9 +665,21 @@ void DataDcaTxop::RequestAccessByCtrlChannel(Ptr<const Packet> packet,
 		return;
 	}
 
+	if(!(*m_pbGlobalFirstRts))
+	{
+		NS_LOG_ERROR("This is NOT the first Rts in current rxing, cancel it");
+		return;
+	}
 
-	NS_LOG_ERROR("Prepare to send Rts for next packet, uid="<< packet->GetUid() );
+	*m_pbGlobalFirstRts = false;
+	// reset global RTS signal after this rxing
+	Time firtRtsResetDelay = m_low->m_lastRxStart + m_low->m_lastRxDuration - Simulator::Now();
+	NS_ASSERT(firtRtsResetDelay.IsStrictlyPositive() );
+	Simulator::Cancel(m_firtRtsReset);
+	m_firtRtsReset = Simulator::Schedule(firtRtsResetDelay,
+			&DataDcaTxop::ResetGlobalFirstRts, this);
 
+	NS_LOG_ERROR("Prepare to send Rts for next packet, pkt uid="<< packet->GetUid() );
 	// prepare RTS
 	Time delay;
 	Ptr<Packet> rtsPacket = Create<Packet>();
@@ -703,28 +718,10 @@ void DataDcaTxop::NotifyDataChannelImpl(Ptr<Packet> packet, WifiMacHeader hdr)
 				<<", src="<<hdr.GetAddr2()
 				<<", duration="<<hdr.GetDuration() );
 
-		if (!*m_pbGlobalFirstRts) // only the globally first RTS is accepted
-		{
-			NS_LOG_ERROR("duplicated RTS in a conversation, drop it.");
-			return;
-		}
-
-		*m_pbGlobalFirstRts = false;
-
 		// setup CTS packet
 		Ptr<Packet> ctsPacket;
 		WifiMacHeader ctsHdr;
 		m_low->SetupCtsForRts(packet, hdr, ctsPacket, ctsHdr);
-
-		// reset global RTS signal after this CTS duration
-		uint64_t startTime;
-		ctsPacket->CopyData((uint8_t *) (&startTime), sizeof(uint64_t));
-		Time start(startTime);
-
-		Time delay = start - Simulator::Now();
-		Simulator::Cancel(m_firtRtsReset);
-		m_firtRtsReset = Simulator::Schedule(delay,
-				&DataDcaTxop::ResetGlobalFirstRts, this);
 
 		// send CTS by ctrl channel
 		if (!m_sendByCtrlChannelCallback.IsNull())
@@ -739,7 +736,7 @@ void DataDcaTxop::NotifyDataChannelImpl(Ptr<Packet> packet, WifiMacHeader hdr)
 	}
 	else if (hdr.IsCts()) // all the CTS must be processed
 	{
-		if(!m_low->IsValidCts(packet, hdr) )
+		if (!m_low->IsValidCts(packet, hdr))
 		{
 			NS_LOG_ERROR("Invalid Cts, drop it.");
 			return;
@@ -870,25 +867,23 @@ void DataDcaTxop::SendPacketAsScheduled()
 }
 
 // someone is transmitting
-void DataDcaTxop::NotifyRxStart(Time duration, WifiMacHeader hdr)
+void DataDcaTxop::NotifyRxStart(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
 {
 	// the current on-air packet is data and long enough, send an Rts
 	// on ctrl channel if needed
-
-
-	if (hdr.IsData() && duration > Time(1000000))
+	if (hdr.IsData() && rxDuration > 1400000 )
 	{
 		NS_LOG_ERROR("start Rx data, src="<<hdr.GetAddr2()
-							<< ", dst="<<hdr.GetAddr1()
-							<<", duration="<<duration);
-		Time delay = NanoSeconds(100); // wait every node has began to receive current on-air packet
-		Simulator::Schedule(delay,
-				&DataDcaTxop::SendRtsOnCtrlChannelIfNeeded,
-				this, duration, hdr);
+				<< ", dst="<<hdr.GetAddr1()
+				<< ", uid="<<packet->GetUid()
+				<< ", size="<<packet->GetSize()
+				<<", duration="<<rxDuration);
+		Time delay = NanoSeconds(100); // wait for a while to make sure every node has began to receive current on-air packet
+		Simulator::Schedule(delay, &DataDcaTxop::SendRtsOnCtrlChannelIfNeeded,
+				this, rxDuration, hdr);
 	}
 
 }
-
 
 void DataDcaTxop::NotifyTxStart(Time duration, WifiMacHeader hdr)
 {
@@ -917,9 +912,11 @@ void DataDcaTxop::SendRtsOnCtrlChannelIfNeeded(Time duration,
 	WifiMacHeader nextHdr;
 	Ptr<const Packet> nextPacket = m_queue->Peek(&nextHdr);
 
-	if (nextHdr.IsData() && NeedRts(nextPacket, &nextHdr)
-			&& IsEnoughForCtrlRts(m_low->m_self, onAirHdr.GetAddr1(),
-					onAirHdr.GetAddr2()) )
+	if (
+			nextHdr.IsData() && NeedRts(nextPacket, &nextHdr)
+			&& IsEnoughForCtrlRts(nextHdr.GetAddr1(), m_low->m_self,
+					onAirHdr.GetAddr1(), onAirHdr.GetAddr2() )
+		)
 	{
 		RequestAccessByCtrlChannel(nextPacket, nextHdr);
 	}
@@ -928,9 +925,7 @@ void DataDcaTxop::SendRtsOnCtrlChannelIfNeeded(Time duration,
 		NS_LOG_ERROR("No need to send Rts: "
 				<< (nextHdr.IsData() ? "Data, " : "Not Data, ")
 				<< (NeedRts(nextPacket, &nextHdr) ? "Need Rts, " : "No Rts, ")
-				<< (IsEnoughForCtrlRts(m_low->m_self, onAirHdr.GetAddr1(),
-						onAirHdr.GetAddr2()) ? "Enough" : "Not Enough")
-				);
+		);
 	}
 
 }
@@ -995,32 +990,51 @@ double DataDcaTxop::CalculateDistance(Ptr<Node> node1, Ptr<Node> node2)
 	return dis;
 }
 
-bool DataDcaTxop::IsEnoughForCtrlRts(Mac48Address myself, Mac48Address onAirDst,
-		Mac48Address onAirSrc)
+// condition:
+// 1. if a node is sending or receive its packet, it is not allowed to send RTS/CTS simultaneously
+// 2. if the distance btw rts sender and on-air packet receiver is large than 1 meter,
+//    then send the Rts on ctrl channel
+bool DataDcaTxop::IsEnoughForCtrlRts(Mac48Address rtsDst, Mac48Address rtsSrc,
+		Mac48Address onAirDst, Mac48Address onAirSrc)
 {
-	bool bEnough = false;
+	if (rtsDst == onAirDst)		// condition 1
+	{
+		NS_LOG_ERROR("do not allow Rts with dst == onAirDst");
+		return false;
+	}
+
+	if (rtsDst == onAirSrc)		// condition 1
+	{
+		NS_LOG_ERROR("do not allow Rts with dst == onAirSrc");
+		return false;
+	}
 
 	Ptr<Node> dstNode;
 	if (!FindNode(onAirDst, dstNode))
 	{
-		NS_LOG_ERROR("Can NOT find corresponding node");
+		NS_LOG_ERROR("Can NOT find corresponding node for onAirDst");
 		return false;
 	}
 
 	Ptr<Node> myNode;
-	if (!FindNode(m_low->m_self, myNode))
+	if (!FindNode(rtsSrc, myNode))
 	{
-		NS_LOG_ERROR("Can NOT find corresponding node");
+		NS_LOG_ERROR("Can NOT find corresponding node for rtsSrc");
 		return false;
 	}
 
 	double dis = CalculateDistance(myNode, dstNode);
 	if (dis >= 1.0)
 	{
-		bEnough = true;
+		return true;
+	}
+	else
+	{
+		NS_LOG_ERROR("Too close to send Rts");
+		return false;
 	}
 
-	return bEnough;
+	return false;
 
 }
 

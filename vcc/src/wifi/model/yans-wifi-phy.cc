@@ -464,7 +464,7 @@ YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
           // sync to signal
           WifiMacHeader hdr;
           packet->PeekHeader(hdr);
-          m_state->SwitchToRx (rxDuration, hdr);
+          m_state->SwitchToRx (rxDuration, hdr, packet);
           NS_ASSERT (m_endRxEvent.IsExpired ());
           NotifyRxBegin (packet);
           m_interference.NotifyRxStart ();

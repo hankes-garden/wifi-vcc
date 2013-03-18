@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 	// setup UDP client
 	uint32_t nMaxPktSize = 1024; // note: if we change the pkt size, change the duration check in DataDcaTxop::NotifyRxStart()
 	Time interPktInterval = MicroSeconds(1500);
-	uint32_t nMaxPktCount = 5000;
+	uint32_t nMaxPktCount = 1;
 
 	ApplicationContainer clientApp;
 	for (uint32_t i = 1; i < wifiStaNodes.GetN(); i = i + 2)

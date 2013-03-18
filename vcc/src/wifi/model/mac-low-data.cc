@@ -207,10 +207,10 @@ void MacLowData::ReceiveOk(Ptr<Packet> packet, double rxSnr, WifiMode txMode,
 	MacLow::ReceiveOk(packet, rxSnr, txMode, preamble);
 }
 
-void MacLowData::NotifyRxStartNow(Time duration, WifiMacHeader hdr)
+void MacLowData::NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
 {
 	// Note: we must call MacLow::NotifyRxStartNow() here!
-	MacLow::NotifyRxStartNow(duration, hdr);
+	MacLow::NotifyRxStartNow(rxDuration, hdr, packet);
 
 	if (m_rxStartCallback.IsNull())
 	{
@@ -218,7 +218,7 @@ void MacLowData::NotifyRxStartNow(Time duration, WifiMacHeader hdr)
 		return;
 	}
 
-	m_rxStartCallback(duration, hdr);
+	m_rxStartCallback(rxDuration, hdr, packet);
 }
 
 void MacLowData::NotifyTxStartNow(Time duration, WifiMacHeader hdr)

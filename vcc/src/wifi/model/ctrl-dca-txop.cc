@@ -608,7 +608,7 @@ void CtrlDcaTxop::EndTxNoAck(void)
 void CtrlDcaTxop::SendByCtrlChannelImpl(Ptr<const Packet> packet,
 		WifiMacHeader dataHdr)
 {
-	NS_LOG_ERROR( (dataHdr.IsRts() ? "Sending RTS, dst = " : "Sending CTS, dst = ")
+	NS_LOG_ERROR( (dataHdr.IsRts() ? "Enqueue an RTS, dst = " : "Enqueue a CTS, dst = ")
 			    <<dataHdr.GetAddr1()
 				<<", src="<<dataHdr.GetAddr2()
 				<<", duration="<<dataHdr.GetDuration() );

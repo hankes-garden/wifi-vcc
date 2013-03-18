@@ -39,93 +39,113 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("eva");
 
+const std::string SSID_DATA_PREFIX = "ssid_data_";
+const std::string SSID_CTRL_PREFIX = "ssid_ctrl_";
+
 int main(int argc, char *argv[])
 {
 	bool verbose = true;
 	uint32_t nSta = 4;
+	NS_ASSERT(nSta % 2 == 0);
+	uint32_t nAp = nSta / 2;
 	uint32_t nPort = 1987;
 	bool g_bGlobalFirstRts = true;
 
+	uint32_t nMaxPktSize = 1024;
+	Time interPktInterval = MicroSeconds(1500);
+	uint32_t nMaxPktCount = 4000;
+
 	if (verbose)
 	{
-//		LogComponentEnable("LinUdpServer", LOG_LEVEL_INFO);
-//		LogComponentEnable("LinUdpClient", LOG_LEVEL_INFO);
+		LogComponentEnableAll(LOG_LEVEL_WARN);
 
-		LogComponentEnableAll(LOG_NONE);
+		LogComponentEnable("LinUdpServer", LOG_LEVEL_INFO);
+		LogComponentEnable("LinUdpClient", LOG_LEVEL_INFO);
+		LogComponentEnable("eva", LOG_LEVEL_INFO);
 
 	}
-	LogComponentEnable("eva", LOG_LEVEL_INFO);
+	else
+	{
+		LogComponentEnableAll(LOG_NONE);
+	}
 
 	// create nodes
-	NodeContainer wifiStaNodes;
-	wifiStaNodes.Create(nSta);
+	NodeContainer staNodeContainer;
+	staNodeContainer.Create(nSta);
 
-	NodeContainer wifiApNode;
-	wifiApNode.Create(1); //only one AP
+	NodeContainer apNodeContainer;
+	apNodeContainer.Create(nAp);
 
 	// setup data rate control algorithm
 	WifiHelper wifiHelper = WifiHelper::Default();
 	wifiHelper.SetRemoteStationManager("ns3::AarfWifiManager",
-			"RtsCtsThreshold", UintegerValue(500)); // enable RTS & CTS
+			"RtsCtsThreshold", UintegerValue(nMaxPktSize-50)); // enable RTS & CTS
 
 	// setup PHY & Channel
 	YansWifiChannelHelper chnHelper = YansWifiChannelHelper::Default();
 	YansWifiPhyHelper phyHelper = YansWifiPhyHelper::Default();
 	phyHelper.SetChannel(chnHelper.Create());
 
-	// ------------STA------------------
+	// ------------Setup Mac------------------
 	// setup STA MAC
 	NqosWifiMacHelper macHelper = NqosWifiMacHelper::Default();
 
-
 	// install netDevices: data first, ctrl later
-	Ssid dataSsid = Ssid("dual_data_ssid");
-	macHelper.SetType("ns3::StaDataWifiMac", "Ssid", SsidValue(dataSsid),
-			"ActiveProbing", BooleanValue(false));
+	macHelper.SetType("ns3::StaDataWifiMac", "ActiveProbing",
+			BooleanValue(false));
 	phyHelper.Set("ChannelNumber", UintegerValue(1));
-	NetDeviceContainer staDataDevicesContainer = wifiHelper.Install(phyHelper,
-			macHelper, wifiStaNodes);
+	NetDeviceContainer staDataDevContainer = wifiHelper.Install(phyHelper,
+			macHelper, staNodeContainer);
 
-	Ssid ctrlSsid = Ssid("dual_ctrl_ssid");
-	macHelper.SetType("ns3::StaCtrlWifiMac", "Ssid", SsidValue(ctrlSsid),
-			"ActiveProbing", BooleanValue(false));
+	macHelper.SetType("ns3::StaCtrlWifiMac", "ActiveProbing",
+			BooleanValue(false));
 	phyHelper.Set("ChannelNumber", UintegerValue(6));
-	NetDeviceContainer staCtrlDevicesContainer = wifiHelper.Install(phyHelper,
-			macHelper, wifiStaNodes);
+	NetDeviceContainer staCtrlDevContainer = wifiHelper.Install(phyHelper,
+			macHelper, staNodeContainer);
 
 	// ------------AP------------------
-	// setup AP MAC
-
 	// install netDevices: data first, ctrl later
-	macHelper.SetType("ns3::ApWifiMacData", "Ssid", SsidValue(dataSsid));
+	macHelper.SetType("ns3::ApWifiMacData");
 	phyHelper.Set("ChannelNumber", UintegerValue(1));
-	NetDeviceContainer apDataDevicesContainer = wifiHelper.Install(phyHelper,
-			macHelper, wifiApNode);
+	NetDeviceContainer apDataDevContainer = wifiHelper.Install(phyHelper,
+			macHelper, apNodeContainer);
 
-	macHelper.SetType("ns3::ApWifiMacCtrl", "Ssid", SsidValue(ctrlSsid));
+	macHelper.SetType("ns3::ApWifiMacCtrl");
 	phyHelper.Set("ChannelNumber", UintegerValue(6));
-	NetDeviceContainer apCtrlDevicesContainer = wifiHelper.Install(phyHelper,
-			macHelper, wifiApNode);
+	NetDeviceContainer apCtrlDevContainer = wifiHelper.Install(phyHelper,
+			macHelper, apNodeContainer);
 
-	// -----------setup callbacks--------------------
+	// -----------setup ssid & callbacks--------------------
 	// NOTE: this MUST be done after all nodes have finished the device installation
-	NodeContainer allNodes = wifiStaNodes;
-	allNodes.Add(wifiApNode);
+	NodeContainer allNodes = staNodeContainer;
+	allNodes.Add(apNodeContainer);
 
-	// setup callbacks for STA
-	for (uint32_t i = 0; i < wifiStaNodes.GetN(); ++i)
+	// setup ssid & callbacks for STA
+	for (uint32_t i = 0; i < staNodeContainer.GetN(); ++i)
 	{
+		uint32_t ssid_number = std::floor(i / 2.0);
+		char strNumber[20] = { 0 };
+		std::sprintf(strNumber, "%d", ssid_number);
+
 		Ptr<WifiNetDevice> dataNetDevice = DynamicCast<WifiNetDevice>(
-				staDataDevicesContainer.Get(i));
+				staDataDevContainer.Get(i));
 		Ptr<StaDataWifiMac> staDataMac = DynamicCast<StaDataWifiMac>(
 				dataNetDevice->GetMac());
 		Ptr<DataDcaTxop> staDataDca = staDataMac->m_dca;
 
 		Ptr<WifiNetDevice> staCtrlNetDevice = DynamicCast<WifiNetDevice>(
-				staCtrlDevicesContainer.Get(i));
+				staCtrlDevContainer.Get(i));
 		Ptr<StaCtrlWifiMac> staCtrlMac = DynamicCast<StaCtrlWifiMac>(
 				staCtrlNetDevice->GetMac());
 		Ptr<CtrlDcaTxop> staCtrlDca = staCtrlMac->m_dca;
+
+		// data ssid
+		std::string strDataSsid = SSID_DATA_PREFIX + strNumber;
+		staDataMac->SetSsid(Ssid(strDataSsid));
+
+		// ctrl ssid
+		std::string strCtrlSsid = SSID_CTRL_PREFIX + strNumber;
+		staCtrlMac->SetSsid(Ssid(strCtrlSsid));
 
 		// set callback for dataDcaTxop
 		staDataDca->SetSendByCtrlChannleCallback(
@@ -146,20 +166,30 @@ int main(int argc, char *argv[])
 
 	}
 
-	// setup callbacks for AP
-	for (uint32_t i = 0; i < wifiApNode.GetN(); ++i)
+	// setup ssid & callbacks for AP
+	for (uint32_t i = 0; i < apNodeContainer.GetN(); ++i)
 	{
 		Ptr<WifiNetDevice> apDataNetDevice = DynamicCast<WifiNetDevice>(
-				apDataDevicesContainer.Get(i));
+				apDataDevContainer.Get(i));
 		Ptr<ApWifiMacData> apDataMac = DynamicCast<ApWifiMacData>(
 				apDataNetDevice->GetMac());
 		Ptr<DataDcaTxop> apDataDca = apDataMac->m_dca;
 
 		Ptr<WifiNetDevice> apCtrlNetDevice = DynamicCast<WifiNetDevice>(
-				apCtrlDevicesContainer.Get(i));
+				apCtrlDevContainer.Get(i));
 		Ptr<ApWifiMacCtrl> apCtrlMac = DynamicCast<ApWifiMacCtrl>(
 				apCtrlNetDevice->GetMac());
 		Ptr<CtrlDcaTxop> apCtrlDca = apCtrlMac->m_dca;
+
+		// data ssid
+		char strNumber[20] = {0};
+		std::sprintf(strNumber, "%d", i);
+		std::string strDataSsid = SSID_DATA_PREFIX + strNumber;
+		apDataMac->SetSsid(Ssid(strDataSsid));
+
+		// ctrl ssid
+		std::string strCtrlSsid = SSID_CTRL_PREFIX + strNumber;
+		apCtrlMac->SetSsid(Ssid(strCtrlSsid));
 
 		// set callback for dataDcaTxop
 		apDataDca->SetSendByCtrlChannleCallback(
@@ -188,72 +218,72 @@ int main(int argc, char *argv[])
 			UintegerValue(3), "LayoutType", StringValue("RowFirst"));
 	mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
 
-	mobility.Install(wifiStaNodes);
-	mobility.Install(wifiApNode);
+	mobility.Install(staNodeContainer);
+	mobility.Install(apNodeContainer);
 
 	// setup Internet stack
 	InternetStackHelper stack;
-	stack.Install(wifiApNode);
-	stack.Install(wifiStaNodes);
+	stack.Install(apNodeContainer);
+	stack.Install(staNodeContainer);
 
 	// assign ip address, data first, ctrl later
 	Ipv4AddressHelper address;
 	address.SetBase("192.168.0.0", "255.255.255.0");
-	address.Assign(apDataDevicesContainer);
-	Ipv4InterfaceContainer wifiIpInterfaceData = address.Assign(
-			staDataDevicesContainer);
+	address.Assign(apDataDevContainer);
+	Ipv4InterfaceContainer ipInterfaceContainerData = address.Assign(
+			staDataDevContainer);
 
-	address.SetBase("192.168.7.0", "255.255.255.0");
-	address.Assign(apCtrlDevicesContainer);
-	Ipv4InterfaceContainer wifiIpInterfaceCtrl = address.Assign(
-			staCtrlDevicesContainer);
+//	address.SetBase("192.168.7.0", "255.255.255.0");
+//	address.Assign(apCtrlDevContainer);
+//	Ipv4InterfaceContainer ipInterfaceContainerCtrl = address.Assign(
+//			staCtrlDevContainer);
 
 	// setup UDP server
 	LinUdpServerHelper srvHelper(nPort);
 	ApplicationContainer srvApp;
-	for (uint32_t i = 0; i < wifiStaNodes.GetN(); i = i + 2)
+	for (uint32_t i = 0; i < staNodeContainer.GetN(); i = i + 2)
 	{
 		srvApp.Add(
-				srvHelper.Install(wifiStaNodes.Get(i),
-						staDataDevicesContainer.Get(i)));
+				srvHelper.Install(staNodeContainer.Get(i),
+						staDataDevContainer.Get(i)));
 		std::cout << "install svr on STA_" << i << std::endl;
 	}
-	srvApp.Start(Seconds(1.0));
+	srvApp.Start(Seconds(10.0));
 	srvApp.Stop(Seconds(60.0));
 
 	// setup UDP client
-	uint32_t nMaxPktSize = 1024; // note: if we change the pkt size, change the duration check in DataDcaTxop::NotifyRxStart()
-	Time interPktInterval = MicroSeconds(1500);
-	uint32_t nMaxPktCount = 5000;
-
 	ApplicationContainer clientApp;
-	for (uint32_t i = 1; i < wifiStaNodes.GetN(); i = i + 2)
+	for (uint32_t i = 1; i < staNodeContainer.GetN(); i = i + 2)
 	{
-		LinUdpClientHelper clientHelper(wifiIpInterfaceData.GetAddress(i - 1),
+		LinUdpClientHelper clientHelper(ipInterfaceContainerData.GetAddress(i - 1),
 				nPort);
 		clientHelper.SetAttribute("MaxPackets", UintegerValue(nMaxPktCount));
 		clientHelper.SetAttribute("Interval", TimeValue(interPktInterval));
 		clientHelper.SetAttribute("PacketSize", UintegerValue(nMaxPktSize));
 		clientApp.Add(
-				clientHelper.Install(wifiStaNodes.Get(i),
-						staDataDevicesContainer.Get(i)));
+				clientHelper.Install(staNodeContainer.Get(i),
+						staDataDevContainer.Get(i)));
 
-		std::cout << "install client on STA_" << i << ", bound to svr on STA_"
+		std::cout << "install client on STA_" << i << ", bind to svr on STA_"
 				<< i - 1 << std::endl;
 	}
 
-	clientApp.Start(Seconds(5.0));
+	clientApp.Start(Seconds(15.0));
 	clientApp.Stop(Seconds(50.0));
+
+	Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
 	// prepare the flow monitor
 	FlowMonitorHelper flowmon;
 	Ptr<FlowMonitor> monitor = flowmon.InstallAll();
 
 	// print out topology information-----------------------
+	std::cout << std::endl;
+	std::cout << "-------------Topology information----------" << std::endl;
 	// STA information
-	for (uint32_t i = 0; i < wifiStaNodes.GetN(); ++i)
+	for (uint32_t i = 0; i < staNodeContainer.GetN(); ++i)
 	{
-		Ptr<Node> staNode = wifiStaNodes.Get(i);
+		Ptr<Node> staNode = staNodeContainer.Get(i);
 
 		std::cout << "STA_" << i << ":" << std::endl;
 
@@ -261,13 +291,32 @@ int main(int argc, char *argv[])
 		std::cout << "data NetDevice addr: "
 				<< DynamicCast<WifiNetDevice>(staNode->GetDevice(0))->GetMac()->GetAddress()
 				<< std::endl;
+		std::cout << "data ssid: "
+				<< DynamicCast<WifiNetDevice>(staNode->GetDevice(0))->GetMac()->GetSsid()
+				<< std::endl;
+		std::cout << "data ip addr: " << ipInterfaceContainerData.GetAddress(i)
+				<< std::endl;
 		std::cout << "ctrl NetDevice addr: "
 				<< DynamicCast<WifiNetDevice>(staNode->GetDevice(1))->GetMac()->GetAddress()
 				<< std::endl;
+		std::cout << "ctrl ssid: "
+				<< DynamicCast<WifiNetDevice>(staNode->GetDevice(1))->GetMac()->GetSsid()
+				<< std::endl;
+//		std::cout << "ctrl ip addr: " << ipInterfaceContainerCtrl.GetAddress(i)
+//				<< std::endl;
 
 		// position
 		Ptr<MobilityModel> position = staNode->GetObject<MobilityModel>();
 		NS_ASSERT(position != 0);
+		if(i == staNodeContainer.GetN()-1)
+				{
+					Vector newPos;
+					newPos.x = 6;
+					newPos.y = 2;
+					newPos.z = 0;
+					position->SetPosition(newPos);
+				}
+
 		Vector pos = position->GetPosition();
 		std::cout << "Position: x=" << pos.x << ", y=" << pos.y << ", z="
 				<< pos.z << std::endl;
@@ -276,9 +325,9 @@ int main(int argc, char *argv[])
 	}
 
 	// AP information
-	for (uint32_t i = 0; i < wifiApNode.GetN(); ++i)
+	for (uint32_t i = 0; i < apNodeContainer.GetN(); ++i)
 	{
-		Ptr<Node> apNode = wifiApNode.Get(i);
+		Ptr<Node> apNode = apNodeContainer.Get(i);
 
 		std::cout << "AP_" << i << ":" << std::endl;
 
@@ -286,8 +335,14 @@ int main(int argc, char *argv[])
 		std::cout << "data NetDevice addr: "
 				<< DynamicCast<WifiNetDevice>(apNode->GetDevice(0))->GetMac()->GetAddress()
 				<< std::endl;
+		std::cout << "data ssid: "
+				<< DynamicCast<WifiNetDevice>(apNode->GetDevice(0))->GetMac()->GetSsid()
+				<< std::endl;
 		std::cout << "ctrl NetDevice addr: "
 				<< DynamicCast<WifiNetDevice>(apNode->GetDevice(1))->GetMac()->GetAddress()
+				<< std::endl;
+		std::cout << "ctrl ssid: "
+				<< DynamicCast<WifiNetDevice>(apNode->GetDevice(1))->GetMac()->GetSsid()
 				<< std::endl;
 
 		// position
@@ -305,7 +360,7 @@ int main(int argc, char *argv[])
 	Simulator::Stop(Seconds(100.0));
 	Simulator::Run();
 
-	std::cout << "Simulator ends:dual" << std::endl;
+	std::cout << "Simulator ends: eva" << std::endl;
 
 	// evaluation
 	monitor->CheckForLostPackets();

@@ -59,7 +59,7 @@ public:
    *   - NotifyRxEndError
    *   - NotifyTxStart
    */
-  virtual void NotifyRxStart (Time duration, WifiMacHeader hdr) = 0;
+  virtual void NotifyRxStart (Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet) = 0;
   /**
    * We have received the last bit of a packet for which
    * NotifyRxStart was invoked first and, the packet has

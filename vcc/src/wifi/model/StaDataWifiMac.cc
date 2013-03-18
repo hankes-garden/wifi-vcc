@@ -40,6 +40,9 @@
 
 NS_LOG_COMPONENT_DEFINE("StaDataWifiMac");
 
+#undef NS_LOG_APPEND_CONTEXT
+#define NS_LOG_APPEND_CONTEXT std::clog << "[mac=" << m_low->m_self << "] "
+
 /*
  * The state machine for this STA is:
  --------------                                          -----------
@@ -260,7 +263,8 @@ void StaDataWifiMac::MissedBeacons(void)
 				m_beaconWatchdogEnd - Simulator::Now(),
 				&StaDataWifiMac::MissedBeacons, this);
 		return;
-	} NS_LOG_DEBUG ("beacon missed");
+	}
+	NS_LOG_ERROR ("beacon missed");
 	SetState(BEACON_MISSED);
 	TryToEnsureAssociated();
 }
@@ -294,6 +298,7 @@ void StaDataWifiMac::Enqueue(Ptr<const Packet> packet, Mac48Address to)
 	NS_LOG_FUNCTION (this << packet << to);
 	if (!IsAssociated())
 	{
+		NS_LOG_ERROR("packet loss due to dis-association");
 		NotifyTxDrop(packet);
 		TryToEnsureAssociated();
 		return;
@@ -504,7 +509,7 @@ void StaDataWifiMac::Receive(Ptr<Packet> packet, const WifiMacHeader *hdr)
 			}
 			else
 			{
-				NS_LOG_DEBUG ("assoc refused");
+				NS_LOG_ERROR ("assoc refused");
 				SetState(REFUSED);
 			}
 		}

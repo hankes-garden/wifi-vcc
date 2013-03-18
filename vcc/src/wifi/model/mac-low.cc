@@ -308,9 +308,9 @@ public:
   virtual ~PhyMacLowListener ()
   {
   }
-  virtual void NotifyRxStart (Time duration, WifiMacHeader hdr)
+  virtual void NotifyRxStart (Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
   {
-	  m_macLow->NotifyRxStartNow(duration, hdr);
+	  m_macLow->NotifyRxStartNow(rxDuration, hdr, packet);
   }
   virtual void NotifyRxEndOk (void)
   {
@@ -627,7 +627,7 @@ void
 MacLow::ReceiveError (Ptr<const Packet> packet, double rxSnr)
 {
   NS_LOG_FUNCTION (this << packet << rxSnr);
-  NS_LOG_DEBUG ("rx failed ");
+  NS_LOG_ERROR ("rx failed, uid="<<packet->GetUid());
   if (m_txParams.MustWaitFastAck ())
     {
       NS_ASSERT (m_fastAckFailedTimeoutEvent.IsExpired ());
@@ -1844,10 +1844,10 @@ MacLow::RegisterBlockAckListenerForAc (enum AcIndex ac, MacLowBlockAckEventListe
   m_edcaListeners.insert (std::make_pair (ac, listener));
 }
 
-void MacLow::NotifyRxStartNow(Time duration, WifiMacHeader hdr)
+void MacLow::NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
 {
 	m_lastRxStart = Simulator::Now();
-	m_lastRxDuration = duration + hdr.GetDuration();
+	m_lastRxDuration = rxDuration + hdr.GetDuration();
 }
 
 void MacLow::NotifyTxStartNow(Time duration, WifiMacHeader hdr)

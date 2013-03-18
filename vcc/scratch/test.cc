@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 	// setup UDP client
 	uint32_t nMaxPktSize = 1024;
 	Time interPktInterval = MicroSeconds(1000);
-	uint32_t nMaxPktCount = 5000;
+	uint32_t nMaxPktCount = 1000;
 
 	ApplicationContainer clientApp;
 	for (uint32_t i = 1; i < wifiStaNodes.GetN(); i = i + 2)

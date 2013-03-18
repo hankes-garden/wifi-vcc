@@ -72,6 +72,9 @@ public:
 
   void SetNotifyDataChannelCallback(NotifyDataChannelCallback callback);
 
+  virtual void NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet);
+    virtual void NotifyTxStartNow(Time duration, WifiMacHeader hdr);
+
 private:
   WifiMode m_lastRtsTxMode;
   double m_lastSnr;

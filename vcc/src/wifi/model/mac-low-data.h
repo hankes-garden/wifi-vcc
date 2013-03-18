@@ -53,7 +53,7 @@ namespace ns3
 class MacLowData: public MacLow
 {
 public:
-	typedef Callback<void, Time, WifiMacHeader> NotifyRxStartCallback;
+	typedef Callback<void, Time, WifiMacHeader , Ptr<const Packet> > NotifyRxStartCallback;
 	typedef Callback<void, Time, WifiMacHeader> NotifyTxStartCallback;
 
 	MacLowData();
@@ -75,7 +75,7 @@ public:
 	virtual void ReceiveOk(Ptr<Packet> packet, double rxSnr, WifiMode txMode,
 			WifiPreamble preamble);
 
-	virtual void NotifyRxStartNow(Time duration, WifiMacHeader hdr);
+	virtual void NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet);
 
 	virtual void NotifyTxStartNow(Time duration, WifiMacHeader hdr);
 

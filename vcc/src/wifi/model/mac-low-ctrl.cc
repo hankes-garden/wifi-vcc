@@ -109,6 +109,8 @@ void MacLowCtrl::SendRtsPacket()
 	WifiMacTrailer fcs;
 	m_currentPacket->AddTrailer(fcs);
 
+	NS_LOG_ERROR("Sending Rts, dst="<<m_currentHdr.GetAddr1()
+			<<", src="<<m_currentHdr.GetAddr2());
 	ForwardDown(m_currentPacket, &m_currentHdr, rtsTxMode);
 	m_currentPacket = 0;
 
@@ -128,6 +130,8 @@ void MacLowCtrl::SendCtsPacket()
 	tag.Set(m_lastSnr);
 	m_currentPacket->AddPacketTag(tag);
 
+	NS_LOG_ERROR("Sending Cts, dst="<<m_currentHdr.GetAddr1()
+				<<", src="<<m_currentHdr.GetAddr2());
 	ForwardDown(m_currentPacket, &m_currentHdr, ctsTxMode);
 	m_currentPacket = 0;
 }
@@ -176,5 +180,24 @@ void MacLowCtrl::SetNotifyDataChannelCallback(
 {
 	m_notifyDataChannelCallback = callback;
 }
+
+void MacLowCtrl::NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
+{
+	MacLow::NotifyRxStartNow(rxDuration, hdr, packet);
+	if(hdr.IsRts() || hdr.IsCts() )
+	{
+		NS_LOG_ERROR(
+				(hdr.IsRts() ? "Rxing Rts" : "Rxing Cts")
+				<<", dst="<<hdr.GetAddr1()
+				<<", src="<<hdr.GetAddr2()
+					);
+	}
+}
+
+void MacLowCtrl::NotifyTxStartNow(Time duration, WifiMacHeader hdr)
+{
+	MacLow::NotifyTxStartNow(duration, hdr);
+}
+
 
 } // namespace ns3

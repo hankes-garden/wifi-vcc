@@ -199,7 +199,7 @@ public:
 
   void SendPacketAsScheduled();
 
-  void NotifyRxStart(Time duration, WifiMacHeader hdr);
+  void NotifyRxStart(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet);
 
   void NotifyTxStart(Time duration, WifiMacHeader hdr);
 
@@ -211,7 +211,7 @@ public:
 
   double CalculateDistance(Ptr<Node> node1, Ptr<Node> node2);
 
-  bool IsEnoughForCtrlRts(Mac48Address myself, Mac48Address onAirDst, Mac48Address onAirSrc);
+  bool IsEnoughForCtrlRts(Mac48Address rtsDst, Mac48Address rtsSrc, Mac48Address onAirDst, Mac48Address onAirSrc);
 
 private:
   SendByCtrlChannelCallback m_sendByCtrlChannelCallback;

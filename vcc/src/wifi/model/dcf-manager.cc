@@ -219,9 +219,9 @@ public:
   virtual ~PhyListener ()
   {
   }
-  virtual void NotifyRxStart (Time duration, WifiMacHeader hdr)
+  virtual void NotifyRxStart (Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
   {
-    m_dcf->NotifyRxStartNow (duration);
+    m_dcf->NotifyRxStartNow (rxDuration);
   }
   virtual void NotifyRxEndOk (void)
   {

@@ -191,11 +191,11 @@ WifiPhyStateHelper::NotifyTxStart (Time duration, WifiMacHeader hdr)
     }
 }
 void
-WifiPhyStateHelper::NotifyRxStart (Time duration, WifiMacHeader hdr)
+WifiPhyStateHelper::NotifyRxStart (Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
 {
   for (Listeners::const_iterator i = m_listeners.begin (); i != m_listeners.end (); i++)
     {
-      (*i)->NotifyRxStart (duration, hdr);
+      (*i)->NotifyRxStart (rxDuration, hdr, packet);
     }
 }
 void
@@ -292,11 +292,11 @@ WifiPhyStateHelper::SwitchToTx (Time txDuration, Ptr<const Packet> packet, WifiM
   m_startTx = now;
 }
 void
-WifiPhyStateHelper::SwitchToRx (Time rxDuration, WifiMacHeader hdr)
+WifiPhyStateHelper::SwitchToRx (Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
 {
   NS_ASSERT (IsStateIdle () || IsStateCcaBusy ());
   NS_ASSERT (!m_rxing);
-  NotifyRxStart (rxDuration, hdr);
+  NotifyRxStart (rxDuration, hdr, packet);
   Time now = Simulator::Now ();
   switch (GetState ())
     {
