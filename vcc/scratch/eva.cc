@@ -27,7 +27,7 @@
 #include "ns3/propagation-loss-model.h"
 #include "ns3/propagation-delay-model.h"
 
-#define VALID_FLOW_COUNT 0
+#define VALID_FLOW_COUNT 50
 
 // throughput evaluation
 
@@ -43,31 +43,240 @@ extern void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount,
 		uint32_t nUdpPktSize, bool rts, bool hidden);
 extern void baseline(uint32_t nStaNum, uint32_t nUdpMaxPktCount,
 		uint32_t nUdpPktSize, bool rts, bool hidden);
+extern void runJob();
+extern void debugJob();
 
+const bool g_bLog = true;
 int main(int argc, char *argv[])
 {
-//	bool bEnableRTS = true;
-	bool bHasHiddenTerminal = true;
+//	runJob();
 
-	uint32_t nSta = 22;
-	uint32_t nMaxPktCount = 190;
-	uint32_t nPktSize = 1500;
-
-//	std::cout << "===== vcc ==========================" << std::endl;
-//		vcc(nSta, nMaxPktCount, nPktSize, bEnableRTS, bHasHiddenTerminal);
-//		std::cout << std::endl;
-
-	std::cout << "===== baseline_rts =================" << std::endl;
-	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
-	std::cout << std::endl;
-
-	std::cout << "===== baseline_no_rts ==============" << std::endl;
-	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
-	std::cout << std::endl;
-
-
+	debugJob();
 
 	return 0;
+}
+
+void debugJob()
+{
+	bool bHasHiddenTerminal = true;
+	uint32_t nPktSize = 1500;
+
+	uint32_t nSta = 34;
+	uint32_t nMaxPktCount = 100;
+
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+	std::cout << " " << nMaxPktCount << " " << nSta;
+	std::cout << std::endl;
+}
+
+void runJob()
+{
+	bool bHasHiddenTerminal = true;
+	uint32_t nPktSize = 1500;
+
+	uint32_t nMaxPktCount = 0;
+
+	uint32_t nTotalPktCount = 4000;
+	for (int i = 40; i >= 6; i = i - 2)
+	{
+		nMaxPktCount = nTotalPktCount / i;
+
+//		baseline(i, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//		std::cout << " ";
+//		baseline(i, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//		std::cout << " ";
+		vcc(i, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+		std::cout << " " << nMaxPktCount << " " << i;
+		std::cout << std::endl;
+	}
+	std::cout << "------------------" << std::endl;
+
+	// manually increase the pktCount
+//	int nSta = 0;
+//
+//	nSta = 40;
+//	nMaxPktCount = 90;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 38;
+//	nMaxPktCount = 100;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 36;
+//	nMaxPktCount = 100;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 34;
+//	nMaxPktCount = 100;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 32;
+//	nMaxPktCount = 100;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 30;
+//	nMaxPktCount = 183;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 28;
+//	nMaxPktCount = 183;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 26;
+//	nMaxPktCount = 183;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 24;
+//	nMaxPktCount = 183;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 22;
+//	nMaxPktCount = 190;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 20;
+//	nMaxPktCount = 200;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 18;
+//	nMaxPktCount = 200;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 16;
+//	nMaxPktCount = 220;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 14;
+//	nMaxPktCount = 260;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 12;
+//	nMaxPktCount = 300;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 10;
+//	nMaxPktCount = 260;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 8;
+//	nMaxPktCount = 400;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
+//
+//	nSta = 6;
+//	nMaxPktCount = 800;
+//	baseline(nSta, nMaxPktCount, nPktSize, false, bHasHiddenTerminal);
+//	std::cout << " ";
+//	baseline(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " ";
+//	vcc(nSta, nMaxPktCount, nPktSize, true, bHasHiddenTerminal);
+//	std::cout << " " << nMaxPktCount << " " << nSta;
+//	std::cout << std::endl;
 
 }
 
@@ -75,7 +284,7 @@ void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 		bool rts, bool hidden)
 {
 
-	bool bLog = false;
+	bool bLog = g_bLog;
 
 	bool bEnableRTS = rts;
 	bool bHasHiddenTerminal = hidden;
@@ -197,12 +406,15 @@ void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 
 	// setup data rate control algorithm
 	WifiHelper wifiHelper = WifiHelper::Default();
-	wifiHelper.SetRemoteStationManager("ns3::ConstantRateWifiManager",
-			"DataMode", StringValue("OfdmRate54Mbps"), "ControlMode",
-			StringValue("OfdmRate54Mbps"), "RtsCtsThreshold",
-			UintegerValue(nRtsThresold));
+//	wifiHelper.SetRemoteStationManager("ns3::ConstantRateWifiManager",
+//			"DataMode", StringValue("OfdmRate54Mbps"), "ControlMode",
+//			StringValue("OfdmRate54Mbps"), "RtsCtsThreshold",
+//			UintegerValue(nRtsThresold));
+	wifiHelper.SetRemoteStationManager("ns3::AarfWifiManager",
+				"RtsCtsThreshold",
+				UintegerValue(nRtsThresold));
 
-	// setup propagation loss model
+// setup propagation loss model
 	Ptr<PropagationLossModel> myLossModel = CreateObject<
 			LogDistancePropagationLossModel>();
 
@@ -317,6 +529,9 @@ void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 		// set callback for ctrlDcaTxop
 		staCtrlDca->SetNotifyDataChannelCallback(
 				MakeCallback(&DataDcaTxop::NotifyDataChannelImpl, staDataDca));
+		staCtrlDca->SetGetDataChannelStateCallback(
+				MakeCallback(&DataDcaTxop::GetDataChannelStateImpl,
+						staDataDca));
 
 	}
 
@@ -365,6 +580,8 @@ void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 		// set callback for ctrlDcaTxop
 		apCtrlDca->SetNotifyDataChannelCallback(
 				MakeCallback(&DataDcaTxop::NotifyDataChannelImpl, apDataDca));
+		apCtrlDca->SetGetDataChannelStateCallback(
+				MakeCallback(&DataDcaTxop::GetDataChannelStateImpl, apDataDca));
 
 	}
 
@@ -423,11 +640,11 @@ void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 	Ptr<FlowMonitor> monitor = flowmon.InstallAll();
 
 	// run
-	std::cout << "Start simulator." << std::endl;
+	NS_LOG_ERROR("Simulation start" );
 	Simulator::Stop(Seconds(simulationDuration));
 	Simulator::Run();
 
-	std::cout << "Simulator ends: eva" << std::endl;
+	NS_LOG_ERROR("Simulation end" );
 
 	if (bLog)
 	{
@@ -525,15 +742,18 @@ void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 						- i->second.timeFirstTxPacket.GetSeconds()) / 1024
 				/ 1024;
 
-		std::cout << "Flow " << i->first /*<< " (" << t.sourceAddress << " -> "
-		 << t.destinationAddress*/<< ")\n";
-		std::cout << " Tx Bytes: " << i->second.txBytes << "\n";
-		std::cout << " Rx Bytes: " << i->second.rxBytes << "\n";
-		std::cout << " Tx packets: " << i->second.txPackets << "\n";
-		std::cout << " Rx packets: " << i->second.rxPackets << "\n";
-		std::cout << " Throughput: " << th << " Mbps\n";
+		if (bLog)
+		{
+			std::cout << "Flow " << i->first /*<< " (" << t.sourceAddress << " -> "
+			 << t.destinationAddress*/<< ")\n";
+			std::cout << " Tx Bytes: " << i->second.txBytes << "\n";
+			std::cout << " Rx Bytes: " << i->second.rxBytes << "\n";
+			std::cout << " Tx packets: " << i->second.txPackets << "\n";
+			std::cout << " Rx packets: " << i->second.rxPackets << "\n";
+			std::cout << " Throughput: " << th << " Mbps\n";
+		}
 
-		if(i->second.rxPackets >= VALID_FLOW_COUNT)
+		if (i->second.rxPackets >= VALID_FLOW_COUNT)
 		{
 			avgThroughput += th;
 			++nValidFlow;
@@ -541,8 +761,7 @@ void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 
 	}
 	avgThroughput = avgThroughput / nValidFlow;
-	std::cout << std::endl << "Average Throughput: " << avgThroughput << " Mbps"
-			<< std::endl << std::endl;
+	std::cout << avgThroughput;
 
 	// channel utility
 	Time avgIdleTime;
@@ -562,6 +781,13 @@ void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 		Ptr<DataDcaTxop> staDataDca = staDataMac->m_dca;
 		totalRtsDuration += staDataDca->Low()->m_myRtsDuration;
 		totalCtsDuration += staDataDca->Low()->m_myCtsDuration;
+
+		uint32_t nUpperLayerLostCount = nMaxPktCount
+				- staDataDca->m_enqueueCount;
+		if (i % 2 != 0 && nUpperLayerLostCount > 0)
+		{
+			NS_LOG_ERROR("STA_"<<i<<", lost due to upper layer: "<<nUpperLayerLostCount);
+		}
 	}
 	for (uint32_t i = 0; i < apNodeContainer.GetN(); ++i)
 	{
@@ -585,7 +811,7 @@ void vcc(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 	double percentage = (lastPacketRxTime.GetDouble() - avgIdleTime.GetDouble()
 			- totalRtsDuration.GetDouble() - totalCtsDuration.GetDouble())
 			/ lastPacketRxTime.GetDouble();
-	std::cout << "Channel utility=" << percentage * 100 << "%" << std::endl;
+	std::cout << " " << percentage;
 
 	Simulator::Destroy();
 }
@@ -594,7 +820,7 @@ void baseline(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 		bool rts, bool hidden)
 {
 
-	bool bLog = false;
+	bool bLog = g_bLog;
 
 	bool bEnableRTS = rts;
 	bool bHasHiddenTerminal = hidden;
@@ -711,10 +937,12 @@ void baseline(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 
 // setup data rate control algorithm
 	WifiHelper wifiHelper = WifiHelper::Default();
-	wifiHelper.SetRemoteStationManager("ns3::ConstantRateWifiManager",
-			"DataMode", StringValue("OfdmRate54Mbps"), "ControlMode",
-			StringValue("OfdmRate54Mbps"), "RtsCtsThreshold",
-			UintegerValue(nRtsThresold));
+//	wifiHelper.SetRemoteStationManager("ns3::ConstantRateWifiManager",
+//			"DataMode", StringValue("OfdmRate54Mbps"), "ControlMode",
+//			StringValue("OfdmRate54Mbps"), "RtsCtsThreshold",
+//			UintegerValue(nRtsThresold));
+	wifiHelper.SetRemoteStationManager("ns3::AarfWifiManager",
+			"RtsCtsThreshold", UintegerValue(nRtsThresold));
 
 // setup propagation loss model
 	Ptr<PropagationLossModel> myLossModel = CreateObject<
@@ -853,11 +1081,11 @@ void baseline(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 	Ptr<FlowMonitor> monitor = flowmon.InstallAll();
 
 // run
-	std::cout << "Start simulator." << std::endl;
+	NS_LOG_ERROR("Start simulation");
 	Simulator::Stop(Seconds(simulationDuration));
 	Simulator::Run();
 
-	std::cout << "Simulator ends: eva" << std::endl;
+	NS_LOG_ERROR("Simulation ends");
 
 	if (bLog)
 	{
@@ -922,7 +1150,7 @@ void baseline(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 
 	Time lastPacketRxTime;
 	double avgThroughput = 0.0;
-	int nValidFlow =  0;
+	int nValidFlow = 0;
 	Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier>(
 			flowmon.GetClassifier());
 	std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
@@ -941,24 +1169,28 @@ void baseline(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 						- i->second.timeFirstTxPacket.GetSeconds()) / 1024
 				/ 1024;
 
-		std::cout << "Flow " << i->first /*<< " (" << t.sourceAddress << " -> "
-		 << t.destinationAddress*/<< ")\n";
-		std::cout << " Tx Bytes: " << i->second.txBytes << "\n";
-		std::cout << " Rx Bytes: " << i->second.rxBytes << "\n";
-		std::cout << " Tx packets: " << i->second.txPackets << "\n";
-		std::cout << " Rx packets: " << i->second.rxPackets << "\n";
-		std::cout << " Throughput: " << th << " Mbps\n";
+		if (bLog)
+		{
+			std::cout << "Flow " << i->first /*<< " (" << t.sourceAddress << " -> "
+			 << t.destinationAddress*/<< ")\n";
+			std::cout << " Tx Bytes: " << i->second.txBytes << "\n";
+			std::cout << " Rx Bytes: " << i->second.rxBytes << "\n";
+			std::cout << " Tx packets: " << i->second.txPackets << "\n";
+			std::cout << " Rx packets: " << i->second.rxPackets << "\n";
+			std::cout << " Throughput: " << th << " Mbps\n";
 
-		if(i->second.rxPackets >= VALID_FLOW_COUNT)
+		}
+
+		if (i->second.rxPackets >= VALID_FLOW_COUNT)
 		{
 			avgThroughput += th;
 			++nValidFlow;
 		}
 
 	}
+
 	avgThroughput = avgThroughput / nValidFlow;
-	std::cout << std::endl << "Average Throughput: " << avgThroughput << " Mbps"
-			<< std::endl << std::endl;
+	std::cout << avgThroughput;
 
 	// channel utility
 	Time totalRtsDuration;
@@ -1000,9 +1232,9 @@ void baseline(uint32_t nStaNum, uint32_t nUdpMaxPktCount, uint32_t nUdpPktSize,
 	avgIdleTime = Time(avgIdleTime.GetDouble() / (nSta + nAp));
 
 	double percentage = (lastPacketRxTime.GetDouble() - avgIdleTime.GetDouble()
-			- totalRtsDuration.GetDouble() - totalCtsDuration.GetDouble() )
+			- totalRtsDuration.GetDouble() - totalCtsDuration.GetDouble())
 			/ lastPacketRxTime.GetDouble();
-	std::cout << "Channel utility=" << percentage * 100 << "%" << std::endl;
+	std::cout << " " << percentage;
 
 	Simulator::Destroy();
 

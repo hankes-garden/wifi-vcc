@@ -628,7 +628,7 @@ void
 MacLow::ReceiveError (Ptr<const Packet> packet, double rxSnr)
 {
   NS_LOG_FUNCTION (this << packet << rxSnr);
-  NS_LOG_ERROR ("rx failed, uid="<<packet->GetUid());
+  NS_LOG_ERROR ("rx failed, uid="<<packet->GetUid()<<", size="<<packet->GetSize());
   if (m_txParams.MustWaitFastAck ())
     {
       NS_ASSERT (m_fastAckFailedTimeoutEvent.IsExpired ());
@@ -1359,7 +1359,7 @@ MacLow::SendDataPacket (void)
   StartDataTxTimers ();
 
   WifiMode dataTxMode = GetDataTxMode (m_currentPacket, &m_currentHdr);
-  NS_LOG_ERROR("dataTxMode="<<dataTxMode.GetUniqueName());
+//  NS_LOG_ERROR("dataTxMode="<<dataTxMode.GetUniqueName());
   Time duration = Seconds (0.0);
   if (m_txParams.HasDurationId ())
     {
@@ -1425,7 +1425,7 @@ MacLow::SendCtsAfterRts (Mac48Address source, Time duration, WifiMode rtsTxMode,
    * right after SIFS.
    */
   WifiMode ctsTxMode = GetCtsTxModeForRts (source, rtsTxMode);
-  NS_LOG_ERROR("ctsTxMode="<<ctsTxMode.GetUniqueName());
+//  NS_LOG_ERROR("ctsTxMode="<<ctsTxMode.GetUniqueName());
   WifiMacHeader cts;
   cts.SetType (WIFI_MAC_CTL_CTS);
   cts.SetDsNotFrom ();
@@ -1462,7 +1462,7 @@ MacLow::SendDataAfterCts (Mac48Address source, Time duration, WifiMode txMode)
   StartDataTxTimers ();
 
   WifiMode dataTxMode = GetDataTxMode (m_currentPacket, &m_currentHdr);
-  NS_LOG_ERROR("dataTxMode af.Cts="<<dataTxMode.GetUniqueName());
+//  NS_LOG_ERROR("dataTxMode af.Cts="<<dataTxMode.GetUniqueName());
   Time newDuration = Seconds (0);
   newDuration += GetSifs ();
   newDuration += GetAckDuration (m_currentHdr.GetAddr1 (), dataTxMode);

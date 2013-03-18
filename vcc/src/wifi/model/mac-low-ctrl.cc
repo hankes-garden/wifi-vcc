@@ -96,18 +96,42 @@ void MacLowCtrl::StartTransmission(Ptr<const Packet> packet,
 	}
 
 	/* When this method completes, we have taken ownership of the medium. */
-	NS_ASSERT(m_phy->IsStateTx ());
+//	NS_ASSERT(m_phy->IsStateTx ());
 }
 
 void MacLowCtrl::SendRtsPacket()
 {
-	StartDataTxTimers ();
+	StartDataTxTimers();
 
 	WifiMode rtsTxMode = GetRtsTxMode(m_currentPacket, &m_currentHdr);
 
 	m_currentPacket->AddHeader(m_currentHdr);
 	WifiMacTrailer fcs;
 	m_currentPacket->AddTrailer(fcs);
+
+	//check whether is enough to send RTS
+	Time ctsDuration = GetCtsDuration(m_currentHdr.GetAddr1(), rtsTxMode);
+	Time rtsDuration = m_phy->CalculateTxDuration(GetCtsSize(), rtsTxMode,
+			WIFI_PREAMBLE_LONG);
+	Time possibleDuration = rtsDuration + GetSifs() + ctsDuration;
+
+	Time dataRxStart;
+	Time dataRxDuration;
+	Time dataTxStart;
+	Time dataTxDuration;
+	Time dataNavStart;
+	Time dataNavDuration;
+	NS_ASSERT(!m_getDataChannelStateCallback.IsNull());
+	m_getDataChannelStateCallback(dataRxStart, dataRxDuration, dataTxStart,
+			dataTxDuration, dataNavStart, dataNavDuration);
+
+	Time possibleEnd = Simulator::Now() + possibleDuration + NanoSeconds(30); // consider the delay of function invoke delay
+	if (possibleEnd >= dataRxStart + dataRxDuration)
+	{
+		NS_LOG_ERROR("It is NOT enough to send a Rts from now, drop it.");
+		m_currentPacket = 0;
+		return;
+	}
 
 	NS_LOG_ERROR("Sending Rts, dst="<<m_currentHdr.GetAddr1()
 			<<", src="<<m_currentHdr.GetAddr2());
@@ -118,9 +142,10 @@ void MacLowCtrl::SendRtsPacket()
 
 void MacLowCtrl::SendCtsPacket()
 {
-	StartDataTxTimers ();
+	StartDataTxTimers();
 
-	WifiMode ctsTxMode = GetCtsTxModeForRts(m_currentHdr.GetAddr1(), m_lastRtsTxMode);
+	WifiMode ctsTxMode = GetCtsTxModeForRts(m_currentHdr.GetAddr1(),
+			m_lastRtsTxMode);
 
 	m_currentPacket->AddHeader(m_currentHdr);
 	WifiMacTrailer fcs;
@@ -130,8 +155,29 @@ void MacLowCtrl::SendCtsPacket()
 	tag.Set(m_lastSnr);
 	m_currentPacket->AddPacketTag(tag);
 
+	//check whether is enough to send RTS
+	Time ctsDuration = GetCtsDuration(m_currentHdr.GetAddr1(), m_lastRtsTxMode);
+
+	Time dataRxStart;
+	Time dataRxDuration;
+	Time dataTxStart;
+	Time dataTxDuration;
+	Time dataNavStart;
+	Time dataNavDuration;
+	NS_ASSERT(!m_getDataChannelStateCallback.IsNull());
+	m_getDataChannelStateCallback(dataRxStart, dataRxDuration, dataTxStart,
+			dataTxDuration, dataNavStart, dataNavDuration);
+
+	Time possibleEnd = Simulator::Now() + ctsDuration + NanoSeconds(30); // consider the delay of function invoke delay
+	if (possibleEnd >= dataRxStart + dataRxDuration)
+	{
+		NS_LOG_ERROR("It is NOT enough to send a Cts from now, drop it.");
+		m_currentPacket = 0;
+		return;
+	}
+
 	NS_LOG_ERROR("Sending Cts, dst="<<m_currentHdr.GetAddr1()
-				<<", src="<<m_currentHdr.GetAddr2());
+			<<", src="<<m_currentHdr.GetAddr2());
 	ForwardDown(m_currentPacket, &m_currentHdr, ctsTxMode);
 	m_currentPacket = 0;
 }
@@ -181,17 +227,24 @@ void MacLowCtrl::SetNotifyDataChannelCallback(
 	m_notifyDataChannelCallback = callback;
 }
 
-void MacLowCtrl::NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
+void MacLowCtrl::SetGetDataChannelStateCallback(
+		GetDataChannelStaeCallback callback)
+{
+	m_getDataChannelStateCallback = callback;
+}
+
+void MacLowCtrl::NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr,
+		Ptr<const Packet> packet)
 {
 	MacLow::NotifyRxStartNow(rxDuration, hdr, packet);
-	if(hdr.IsRts() || hdr.IsCts() )
+	if (hdr.IsRts() || hdr.IsCts())
 	{
 		NS_LOG_ERROR(
 				(hdr.IsRts() ? "Rxing Rts" : "Rxing Cts")
 				<<", dst="<<hdr.GetAddr1()
 				<<", src="<<hdr.GetAddr2()
 				<<", rxing duration="<<rxDuration
-					);
+		);
 	}
 }
 
@@ -199,6 +252,5 @@ void MacLowCtrl::NotifyTxStartNow(Time duration, WifiMacHeader hdr)
 {
 	MacLow::NotifyTxStartNow(duration, hdr);
 }
-
 
 } // namespace ns3

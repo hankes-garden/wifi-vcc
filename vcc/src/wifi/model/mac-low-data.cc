@@ -167,7 +167,7 @@ void MacLowData::UpdateNav(const Time & start, const Time & duration)
 		m_lastNavStart = now;
 		m_lastNavDuration = realDuration;
 
-		NS_LOG_ERROR("Nav updated: start = " << now << ", duration = " << realDuration);
+		NS_LOG_DEBUG("Nav updated: start = " << now << ", duration = " << realDuration);
 	}
 	else
 	{
@@ -198,9 +198,9 @@ void MacLowData::ReceiveOk(Ptr<Packet> packet, double rxSnr, WifiMode txMode,
 {
 	WifiMacHeader hdr;
 	packet->PeekHeader(hdr);
-	if (hdr.GetAddr1() == m_self && hdr.IsData())
+	if (hdr.GetAddr1() == m_self && hdr.IsData() &&  packet->GetSize() > 512)
 	{
-		NS_LOG_ERROR ("Receive data from = " << hdr.GetAddr2 ()
+		NS_LOG_ERROR ("Receive data OK, src = " << hdr.GetAddr2 ()
 				<<", size = " << packet->GetSize() );
 	}
 

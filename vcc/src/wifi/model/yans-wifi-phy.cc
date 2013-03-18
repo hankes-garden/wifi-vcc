@@ -420,7 +420,7 @@ YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
   switch (m_state->GetState ())
     {
     case YansWifiPhy::SWITCHING:
-      NS_LOG_DEBUG ("drop packet because of channel switching");
+      NS_LOG_ERROR ("drop packet because of channel switching");
       NotifyRxDrop (packet);
       /*
        * Packets received on the upcoming channel are added to the event list
@@ -447,6 +447,10 @@ YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
           // currently-received packet.
           goto maybeCcaBusy;
         }
+      else
+      {
+    	  NS_LOG_ERROR ("drop packet because already in Rx");
+      }
       break;
     case YansWifiPhy::TX:
       NS_LOG_DEBUG ("drop packet because already in Tx (power=" <<
@@ -458,6 +462,10 @@ YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
           // currently-transmitted packet.
           goto maybeCcaBusy;
         }
+      else
+      {
+    	  NS_LOG_ERROR ("drop packet because already in Tx");
+      }
       break;
     case YansWifiPhy::CCA_BUSY:
     case YansWifiPhy::IDLE:
@@ -797,6 +805,12 @@ YansWifiPhy::EndReceive (Ptr<Packet> packet, Ptr<InterferenceHelper::Event> even
     }
   else
     {
+	  if(packet->GetSize() > 512)
+	  {
+			NS_LOG_ERROR("mode=" << (event->GetPayloadMode ().GetDataRate ()) << ", snr=" << snrPer.snr << ", per=" << snrPer.per << ", size=" << packet->GetSize ());
+	  }
+
+
       /* failure. */
       NotifyRxDrop (packet);
       m_state->SwitchFromRxEndError (packet, snrPer.snr);

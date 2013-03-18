@@ -238,7 +238,8 @@ void DataDcaTxop::Queue(Ptr<const Packet> packet, const WifiMacHeader &hdr)
 
 	if(NeedRts(packet, &hdr) )
 	{
-		NS_LOG_ERROR("Data Channel enqueue, uid="<<packet->GetUid()
+		++m_enqueueCount;
+		NS_LOG_DEBUG("Data Channel enqueue, uid="<<packet->GetUid()
 					<<", dst="<<hdr.GetAddr1()
 					<<", size="<<packet->GetSize());
 	}
@@ -267,7 +268,7 @@ void DataDcaTxop::RestartAccessIfNeeded(void)
 	if (m_currentPacket == 0 && m_bRequestAccessSucceeded) // already got a plan for current packet
 	{
 		// do nothing since we have already arranged sending for next packet
-		NS_LOG_ERROR("already arranged sending for next packet");
+		NS_LOG_DEBUG("already arranged sending for next packet");
 		return;
 	}
 
@@ -293,7 +294,7 @@ void DataDcaTxop::StartAccessIfNeeded(void)
 	if (m_currentPacket == 0 && m_bRequestAccessSucceeded) // already got a plan for current packet
 	{
 		// do nothing since we have already arranged sending for next packet
-		NS_LOG_ERROR("already got a plan for next packet");
+		NS_LOG_DEBUG("already got a plan for next packet");
 		return;
 	}
 
@@ -873,7 +874,7 @@ void DataDcaTxop::NotifyRxStart(Time rxDuration, WifiMacHeader hdr, Ptr<const Pa
 	// on ctrl channel if needed
 	if (hdr.IsData() && rxDuration > Time(180000) )
 	{
-		NS_LOG_ERROR("start Rx data, src="<<hdr.GetAddr2()
+		NS_LOG_DEBUG("start Rx data, src="<<hdr.GetAddr2()
 				<< ", dst="<<hdr.GetAddr1()
 				<< ", uid="<<packet->GetUid()
 				<< ", size="<<packet->GetSize()
@@ -903,7 +904,7 @@ void DataDcaTxop::SendRtsOnCtrlChannelIfNeeded(Time duration,
 	// check whether to send RTS on ctrl channel
 	if (m_queue->IsEmpty())
 	{
-		NS_LOG_ERROR("do NOT need Rts since m_queue is empty.");
+		NS_LOG_INFO("do NOT need Rts since m_queue is empty.");
 		return;
 	}
 
@@ -920,7 +921,7 @@ void DataDcaTxop::SendRtsOnCtrlChannelIfNeeded(Time duration,
 	}
 	else
 	{
-		NS_LOG_ERROR("No need to send Rts: "
+		NS_LOG_DEBUG("No need to send Rts: "
 				<< (nextHdr.IsData() ? "Data, " : "Not Data, ")
 				<< (NeedRts(nextPacket, &nextHdr) ? "Need Rts, " : "No Rts, ")
 		);
@@ -1034,6 +1035,20 @@ bool DataDcaTxop::IsEnoughForCtrlRts(Mac48Address rtsDst, Mac48Address rtsSrc,
 
 	return false;
 
+}
+
+void DataDcaTxop::GetDataChannelStateImpl(Time & lastRxStart,
+		Time & lastRxDuration, Time & lastTxStart, Time & lastTxDuration,
+		Time & lastNavStart, Time & lastNavDuration)
+{
+	lastRxStart = m_low->m_myLastRxStart;
+	lastRxDuration = m_low->m_myLastRxDuration;
+
+	lastTxStart = m_low->m_myLastTxStart;
+	lastTxDuration = m_low->m_myLastTxDuration;
+
+	lastNavStart = m_low->m_lastNavStart;
+	lastNavDuration = m_low->m_lastNavDuration;
 }
 
 } // namespace ns3

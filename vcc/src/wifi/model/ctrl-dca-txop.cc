@@ -177,6 +177,8 @@ void CtrlDcaTxop::SetLow(Ptr<MacLowCtrl> low)
 	m_low = low;
 	m_low->SetNotifyDataChannelCallback(
 			MakeCallback(&CtrlDcaTxop::NotifyDataChannel, this));
+	m_low->SetGetDataChannelStateCallback(
+			MakeCallback(&CtrlDcaTxop::GetDataChannelState, this) );
 }
 void CtrlDcaTxop::SetWifiRemoteStationManager(
 		Ptr<WifiRemoteStationManager> remoteManager)
@@ -609,9 +611,9 @@ void CtrlDcaTxop::SendByCtrlChannelImpl(Ptr<const Packet> packet,
 		WifiMacHeader dataHdr)
 {
 	NS_LOG_ERROR( (dataHdr.IsRts() ? "Enqueue an RTS, dst = " : "Enqueue a CTS, dst = ")
-			    <<dataHdr.GetAddr1()
-				<<", src="<<dataHdr.GetAddr2()
-				<<", duration="<<dataHdr.GetDuration() );
+			<<dataHdr.GetAddr1()
+			<<", src="<<dataHdr.GetAddr2()
+			<<", duration="<<dataHdr.GetDuration());
 
 	// find corresponding ctrl mac address
 	Ptr<Node> dstNode;
@@ -650,7 +652,7 @@ void CtrlDcaTxop::SendByCtrlChannelImpl(Ptr<const Packet> packet,
 void CtrlDcaTxop::SetNotifyDataChannelCallback(
 		NotifyDataChannelCallback callback)
 {
-	NS_ASSERT(!callback.IsNull() );
+	NS_ASSERT(!callback.IsNull());
 	m_notifyDataChannelCallback = callback;
 }
 
@@ -736,6 +738,20 @@ void CtrlDcaTxop::NotifyDataChannel(Ptr<Packet> packet, WifiMacHeader hdr)
 	}
 
 	m_notifyDataChannelCallback(packet, hdr);
+}
+
+void CtrlDcaTxop::SetGetDataChannelStateCallback(
+		GetDataChannelStaeCallback callback)
+{
+	m_getDataChannelStateCallback = callback;
+}
+
+void CtrlDcaTxop::GetDataChannelState(Time & lastRxStart, Time & lastRxDuration,
+		Time & lastTxStart, Time & lastTxDuration, Time & lastNavStart,
+		Time & lastNavDuration)
+{
+	m_getDataChannelStateCallback(lastRxStart, lastRxDuration, lastTxStart,
+			lastTxDuration, lastNavStart, lastNavDuration);
 }
 
 } // namespace ns3

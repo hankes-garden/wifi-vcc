@@ -55,6 +55,8 @@ class MacLowCtrl : public MacLow
 public:
 
 	typedef Callback <void, Ptr<Packet>, WifiMacHeader > NotifyDataChannelCallback;
+	typedef Callback<void, Time &, Time &, Time &, Time &, Time &, Time &> GetDataChannelStaeCallback;
+
 
   MacLowCtrl ();
   virtual ~MacLowCtrl ();
@@ -71,6 +73,7 @@ public:
 			WifiPreamble preamble);
 
   void SetNotifyDataChannelCallback(NotifyDataChannelCallback callback);
+  void SetGetDataChannelStateCallback(GetDataChannelStaeCallback callback);
 
   virtual void NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet);
     virtual void NotifyTxStartNow(Time duration, WifiMacHeader hdr);
@@ -79,6 +82,7 @@ private:
   WifiMode m_lastRtsTxMode;
   double m_lastSnr;
   NotifyDataChannelCallback m_notifyDataChannelCallback;
+  GetDataChannelStaeCallback m_getDataChannelStateCallback;
 
 };
 

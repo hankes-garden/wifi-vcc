@@ -33,7 +33,8 @@
 #include "ns3/mac-low-ctrl.h"
 #include "ns3/node-container.h"
 
-namespace ns3 {
+namespace ns3
+{
 
 class DcfState;
 class DcfManager;
@@ -66,145 +67,150 @@ class MacStations;
  * The rts/cts policy is similar to the fragmentation policy: when
  * a packet is bigger than a threshold, the rts/cts protocol is used.
  */
-class CtrlDcaTxop : public Dcf
+class CtrlDcaTxop: public Dcf
 {
 public:
-  static TypeId GetTypeId (void);
+	static TypeId GetTypeId(void);
 
-  typedef Callback <void, const WifiMacHeader&> TxOk;
-  typedef Callback <void, const WifiMacHeader&> TxFailed;
-  typedef Callback <void, Ptr<Packet>, WifiMacHeader> NotifyDataChannelCallback;
+	typedef Callback<void, const WifiMacHeader&> TxOk;
+	typedef Callback<void, const WifiMacHeader&> TxFailed;
+	typedef Callback<void, Ptr<Packet>, WifiMacHeader> NotifyDataChannelCallback;
+	typedef Callback<void, Time &, Time &, Time &, Time &, Time &, Time &> GetDataChannelStaeCallback;
 
-  CtrlDcaTxop ();
-  ~CtrlDcaTxop ();
+	CtrlDcaTxop();
+	~CtrlDcaTxop();
 
-  void SetLow (Ptr<MacLowCtrl> low);
-  void SetManager (DcfManager *manager);
-  void SetWifiRemoteStationManager (Ptr<WifiRemoteStationManager> remoteManager);
+	void SetLow(Ptr<MacLowCtrl> low);
+	void SetManager(DcfManager *manager);
+	void SetWifiRemoteStationManager(
+			Ptr<WifiRemoteStationManager> remoteManager);
 
-  /**
-   * \param callback the callback to invoke when a
-   * packet transmission was completed successfully.
-   */
-  void SetTxOkCallback (TxOk callback);
-  /**
-   * \param callback the callback to invoke when a
-   * packet transmission was completed unsuccessfully.
-   */
-  void SetTxFailedCallback (TxFailed callback);
+	/**
+	 * \param callback the callback to invoke when a
+	 * packet transmission was completed successfully.
+	 */
+	void SetTxOkCallback(TxOk callback);
+	/**
+	 * \param callback the callback to invoke when a
+	 * packet transmission was completed unsuccessfully.
+	 */
+	void SetTxFailedCallback(TxFailed callback);
 
-  Ptr<WifiMacQueue > GetQueue () const;
-  virtual void SetMinCw (uint32_t minCw);
-  virtual void SetMaxCw (uint32_t maxCw);
-  virtual void SetAifsn (uint32_t aifsn);
-  virtual uint32_t GetMinCw (void) const;
-  virtual uint32_t GetMaxCw (void) const;
-  virtual uint32_t GetAifsn (void) const;
+	Ptr<WifiMacQueue> GetQueue() const;
+	virtual void SetMinCw(uint32_t minCw);
+	virtual void SetMaxCw(uint32_t maxCw);
+	virtual void SetAifsn(uint32_t aifsn);
+	virtual uint32_t GetMinCw(void) const;
+	virtual uint32_t GetMaxCw(void) const;
+	virtual uint32_t GetAifsn(void) const;
 
-  /**
-   * \param packet packet to send
-   * \param hdr header of packet to send.
-   *
-   * Store the packet in the internal queue until it
-   * can be sent safely.
-   */
-  void Queue (Ptr<const Packet> packet, const WifiMacHeader &hdr);
+	/**
+	 * \param packet packet to send
+	 * \param hdr header of packet to send.
+	 *
+	 * Store the packet in the internal queue until it
+	 * can be sent safely.
+	 */
+	void Queue(Ptr<const Packet> packet, const WifiMacHeader &hdr);
 
- /**
-  * Assign a fixed random variable stream number to the random variables
-  * used by this model.  Return the number of streams (possibly zero) that
-  * have been assigned.
-  *
-  * \param stream first stream index to use
-  * \return the number of stream indices assigned by this model
-  */
-  int64_t AssignStreams (int64_t stream);
+	/**
+	 * Assign a fixed random variable stream number to the random variables
+	 * used by this model.  Return the number of streams (possibly zero) that
+	 * have been assigned.
+	 *
+	 * \param stream first stream index to use
+	 * \return the number of stream indices assigned by this model
+	 */
+	int64_t AssignStreams(int64_t stream);
 
-  Ptr<MacLowCtrl> Low (void);
-
+	Ptr<MacLowCtrl> Low(void);
 
 private:
-  class TransmissionListener;
-  class NavListener;
-  class PhyListener;
-  class Dcf;
-  friend class Dcf;
-  friend class TransmissionListener;
+	class TransmissionListener;
+	class NavListener;
+	class PhyListener;
+	class Dcf;
+	friend class Dcf;
+	friend class TransmissionListener;
 
-  CtrlDcaTxop &operator = (const CtrlDcaTxop &);
-  CtrlDcaTxop (const CtrlDcaTxop &o);
+	CtrlDcaTxop &operator =(const CtrlDcaTxop &);
+	CtrlDcaTxop(const CtrlDcaTxop &o);
 
-  // Inherited from ns3::Object
+	// Inherited from ns3::Object
 
-  void DoStart ();
-  /* dcf notifications forwarded here */
-  bool NeedsAccess (void) const;
-  void NotifyAccessGranted (void);
-  void NotifyInternalCollision (void);
-  void NotifyCollision (void);
-  /**
-  * When a channel switching occurs, enqueued packets are removed.
-  */
-  void NotifyChannelSwitching (void);
-  /* event handlers */
-  void GotCts (double snr, WifiMode txMode);
-  void MissedCts (void);
-  void GotAck (double snr, WifiMode txMode);
-  void MissedAck (void);
-  void StartNext (void);
-  void Cancel (void);
-  void EndTxNoAck (void);
+	void DoStart();
+	/* dcf notifications forwarded here */
+	bool NeedsAccess(void) const;
+	void NotifyAccessGranted(void);
+	void NotifyInternalCollision(void);
+	void NotifyCollision(void);
+	/**
+	 * When a channel switching occurs, enqueued packets are removed.
+	 */
+	void NotifyChannelSwitching(void);
+	/* event handlers */
+	void GotCts(double snr, WifiMode txMode);
+	void MissedCts(void);
+	void GotAck(double snr, WifiMode txMode);
+	void MissedAck(void);
+	void StartNext(void);
+	void Cancel(void);
+	void EndTxNoAck(void);
 
-  void RestartAccessIfNeeded (void);
-  void StartAccessIfNeeded (void);
-  bool NeedRts (Ptr<const Packet> packet, const WifiMacHeader *header);
-  bool NeedRtsRetransmission (void);
-  bool NeedDataRetransmission (void);
-  bool NeedFragmentation (void);
-  uint32_t GetNextFragmentSize (void);
-  uint32_t GetFragmentSize (void);
-  uint32_t GetFragmentOffset (void);
-  bool IsLastFragment (void);
-  void NextFragment (void);
-  Ptr<Packet> GetFragmentPacket (WifiMacHeader *hdr);
-  virtual void DoDispose (void);
+	void RestartAccessIfNeeded(void);
+	void StartAccessIfNeeded(void);
+	bool NeedRts(Ptr<const Packet> packet, const WifiMacHeader *header);
+	bool NeedRtsRetransmission(void);
+	bool NeedDataRetransmission(void);
+	bool NeedFragmentation(void);
+	uint32_t GetNextFragmentSize(void);
+	uint32_t GetFragmentSize(void);
+	uint32_t GetFragmentOffset(void);
+	bool IsLastFragment(void);
+	void NextFragment(void);
+	Ptr<Packet> GetFragmentPacket(WifiMacHeader *hdr);
+	virtual void DoDispose(void);
 
-  Dcf *m_dcf;
-  DcfManager *m_manager;
-  TxOk m_txOkCallback;
-  TxFailed m_txFailedCallback;
-  Ptr<WifiMacQueue> m_queue;
-  MacTxMiddle *m_txMiddle;
-  Ptr <MacLowCtrl> m_low;
-  Ptr<WifiRemoteStationManager> m_stationManager;
-  TransmissionListener *m_transmissionListener;
-  RandomStream *m_rng;
+	Dcf *m_dcf;
+	DcfManager *m_manager;
+	TxOk m_txOkCallback;
+	TxFailed m_txFailedCallback;
+	Ptr<WifiMacQueue> m_queue;
+	MacTxMiddle *m_txMiddle;
+	Ptr<MacLowCtrl> m_low;
+	Ptr<WifiRemoteStationManager> m_stationManager;
+	TransmissionListener *m_transmissionListener;
+	RandomStream *m_rng;
 
-  bool m_accessOngoing;
-  Ptr<const Packet> m_currentPacket;
-  WifiMacHeader m_currentHdr;
-  uint8_t m_fragmentNumber;
-
+	bool m_accessOngoing;
+	Ptr<const Packet> m_currentPacket;
+	WifiMacHeader m_currentHdr;
+	uint8_t m_fragmentNumber;
 
 public:
-  void SendByCtrlChannelImpl(Ptr<const Packet> packet, WifiMacHeader dataHdr);
+	void SendByCtrlChannelImpl(Ptr<const Packet> packet, WifiMacHeader dataHdr);
 
-  void SetNotifyDataChannelCallback(NotifyDataChannelCallback callback);
+	void SetNotifyDataChannelCallback(NotifyDataChannelCallback callback);
 
-  void SetNodeContainer(NodeContainer *pContainer);
+	void SetGetDataChannelStateCallback(GetDataChannelStaeCallback callback);
 
-  void NotifyDataChannel(Ptr<Packet> packet, WifiMacHeader hdr);
+	void SetNodeContainer(NodeContainer *pContainer);
 
-  bool FindNode(Mac48Address addr, Ptr<Node> &node);
+	void NotifyDataChannel(Ptr<Packet> packet, WifiMacHeader hdr);
+
+	 void GetDataChannelState(Time & lastRxStart, Time & lastRxDuration,
+				Time & lastTxStart, Time & lastTxDuration, Time & lastNavStart,
+				Time & lastNavDuration);
+
+	bool FindNode(Mac48Address addr, Ptr<Node> &node);
 
 private:
-  NotifyDataChannelCallback m_notifyDataChannelCallback;
+	NotifyDataChannelCallback m_notifyDataChannelCallback;
+	GetDataChannelStaeCallback m_getDataChannelStateCallback;
 
-  NodeContainer * m_pNodeContainer;
+	NodeContainer * m_pNodeContainer;
 };
 
 } // namespace ns3
-
-
 
 #endif /* DCA_TXOP_H */

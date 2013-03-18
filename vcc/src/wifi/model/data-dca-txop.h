@@ -215,6 +215,10 @@ public:
 
   bool IsEnoughForCtrlRts(Mac48Address rtsDst, Mac48Address rtsSrc, Mac48Address onAirDst, Mac48Address onAirSrc);
 
+  void GetDataChannelStateImpl(Time & lastRxStart, Time & lastRxDuration,
+			Time & lastTxStart, Time & lastTxDuration, Time & lastNavStart,
+			Time & lastNavDuration);
+
 private:
   SendByCtrlChannelCallback m_sendByCtrlChannelCallback;
   bool m_bRequestAccessSucceeded;
@@ -224,6 +228,9 @@ private:
   uint16_t m_packetID;
 
   NodeContainer * m_pNodeContainer;
+
+public:
+  uint32_t m_enqueueCount;
 };
 
 } // namespace ns3
