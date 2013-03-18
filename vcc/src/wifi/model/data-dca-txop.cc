@@ -871,7 +871,7 @@ void DataDcaTxop::NotifyRxStart(Time rxDuration, WifiMacHeader hdr, Ptr<const Pa
 {
 	// the current on-air packet is data and long enough, send an Rts
 	// on ctrl channel if needed
-	if (hdr.IsData() && rxDuration > 1400000 )
+	if (hdr.IsData() && rxDuration > 1000000 )
 	{
 		NS_LOG_ERROR("start Rx data, src="<<hdr.GetAddr2()
 				<< ", dst="<<hdr.GetAddr1()

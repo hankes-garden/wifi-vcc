@@ -15,7 +15,6 @@
  */
 
 #include "ns3/core-module.h"
-#include "ns3/point-to-point-module.h"
 #include "ns3/network-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/wifi-module.h"
@@ -23,16 +22,17 @@
 #include "ns3/csma-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/flow-monitor-module.h"
-#include "ns3/lin-udp-client-server-helper.h"
+#include "ns3/udp-client-server-helper.h"
 
-// throughput evaluation
+//baseline throughput
+//NOTE:
+//     1. disable the RTS/CTS
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("eva");
 
 const std::string SSID_DATA_PREFIX = "ssid_data_";
-const std::string SSID_CTRL_PREFIX = "ssid_ctrl_";
 
 int main(int argc, char *argv[])
 {
@@ -48,7 +48,6 @@ int main(int argc, char *argv[])
 	}
 
 	uint32_t nPort = 1987;
-	bool g_bGlobalFirstRts = true;
 
 	uint32_t nMaxPktSize = 1024;
 	Time interPktInterval = MicroSeconds(1500);
@@ -78,11 +77,11 @@ int main(int argc, char *argv[])
 	// setup data rate control algorithm
 	WifiHelper wifiHelper = WifiHelper::Default();
 	wifiHelper.SetRemoteStationManager("ns3::AarfWifiManager",
-			"RtsCtsThreshold", UintegerValue(nMaxPktSize - 50)); // enable RTS & CTS
-//	wifiHelper.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-//		"ControlMode", StringValue ("OfdmRate54Mbps"));
-//		wifiHelper.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-//		                                "DataMode", StringValue ("OfdmRate54Mbps"));
+			"RtsCtsThreshold", UintegerValue(nMaxPktSize + 1000)); // disable RTS & CTS
+	wifiHelper.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
+	"ControlMode", StringValue ("OfdmRate54Mbps"));
+	wifiHelper.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
+	                                "DataMode", StringValue ("OfdmRate54Mbps"));
 
 	// setup PHY & Channel
 	YansWifiChannelHelper chnHelper = YansWifiChannelHelper::Default();
@@ -94,34 +93,21 @@ int main(int argc, char *argv[])
 	NqosWifiMacHelper macHelper = NqosWifiMacHelper::Default();
 
 	// install netDevices: data first, ctrl later
-	macHelper.SetType("ns3::StaDataWifiMac", "ActiveProbing",
+	macHelper.SetType("ns3::StaWifiMac", "ActiveProbing",
 			BooleanValue(false));
 	phyHelper.Set("ChannelNumber", UintegerValue(1));
 	NetDeviceContainer staDataDevContainer = wifiHelper.Install(phyHelper,
 			macHelper, staNodeContainer);
 
-	macHelper.SetType("ns3::StaCtrlWifiMac", "ActiveProbing",
-			BooleanValue(false));
-	phyHelper.Set("ChannelNumber", UintegerValue(6));
-	NetDeviceContainer staCtrlDevContainer = wifiHelper.Install(phyHelper,
-			macHelper, staNodeContainer);
 
 	// ------------AP------------------
 	// install netDevices: data first, ctrl later
-	macHelper.SetType("ns3::ApWifiMacData");
+	macHelper.SetType("ns3::ApWifiMac");
 	phyHelper.Set("ChannelNumber", UintegerValue(1));
 	NetDeviceContainer apDataDevContainer = wifiHelper.Install(phyHelper,
 			macHelper, apNodeContainer);
 
-	macHelper.SetType("ns3::ApWifiMacCtrl");
-	phyHelper.Set("ChannelNumber", UintegerValue(6));
-	NetDeviceContainer apCtrlDevContainer = wifiHelper.Install(phyHelper,
-			macHelper, apNodeContainer);
-
-	// -----------setup ssid & callbacks--------------------
-	// NOTE: this MUST be done after all nodes have finished the device installation
-	NodeContainer allNodes = staNodeContainer;
-	allNodes.Add(apNodeContainer);
+	// -----------setup ssid --------------------
 
 	// setup ssid/callbacks for STA, and divide them into 2 clusters
 	NodeContainer staWithAp0;
@@ -140,63 +126,27 @@ int main(int argc, char *argv[])
 			staWithAp1.Add(staNodeContainer.Get(i));
 		}
 
-		char strNumber[10] =
-		{ 0 };
+		char strNumber[10] = { 0 };
 		std::sprintf(strNumber, "%d", ssid_number);
 
 		Ptr<WifiNetDevice> dataNetDevice = DynamicCast<WifiNetDevice>(
 				staDataDevContainer.Get(i));
-		Ptr<StaDataWifiMac> staDataMac = DynamicCast<StaDataWifiMac>(
+		Ptr<StaWifiMac> staDataMac = DynamicCast<StaWifiMac>(
 				dataNetDevice->GetMac());
-		Ptr<DataDcaTxop> staDataDca = staDataMac->m_dca;
-
-		Ptr<WifiNetDevice> staCtrlNetDevice = DynamicCast<WifiNetDevice>(
-				staCtrlDevContainer.Get(i));
-		Ptr<StaCtrlWifiMac> staCtrlMac = DynamicCast<StaCtrlWifiMac>(
-				staCtrlNetDevice->GetMac());
-		Ptr<CtrlDcaTxop> staCtrlDca = staCtrlMac->m_dca;
 
 		// data ssid
 		std::string strDataSsid = SSID_DATA_PREFIX + strNumber;
 		staDataMac->SetSsid(Ssid(strDataSsid));
 
-		// ctrl ssid
-		std::string strCtrlSsid = SSID_CTRL_PREFIX + strNumber;
-		staCtrlMac->SetSsid(Ssid(strCtrlSsid));
-
-		// set callback for dataDcaTxop
-		staDataDca->SetSendByCtrlChannleCallback(
-				MakeCallback(&CtrlDcaTxop::SendByCtrlChannelImpl, staCtrlDca));
-
-		// set global information for dataDcaTxop
-		staDataDca->SetGlobalRtsSignal(&g_bGlobalFirstRts);
-
-		// set topology to dataDcaTxop
-		staDataDca->SetNodeContainer(&allNodes);
-
-		// set topology to ctrlDcaTxop
-		staCtrlDca->SetNodeContainer(&allNodes);
-
-		// set callback for ctrlDcaTxop
-		staCtrlDca->SetNotifyDataChannelCallback(
-				MakeCallback(&DataDcaTxop::NotifyDataChannelImpl, staDataDca));
-
 	}
 
-	// setup ssid & callbacks for AP
+	// setup ssid for AP
 	for (uint32_t i = 0; i < apNodeContainer.GetN(); ++i)
 	{
 		Ptr<WifiNetDevice> apDataNetDevice = DynamicCast<WifiNetDevice>(
 				apDataDevContainer.Get(i));
-		Ptr<ApWifiMacData> apDataMac = DynamicCast<ApWifiMacData>(
+		Ptr<ApWifiMac> apDataMac = DynamicCast<ApWifiMac>(
 				apDataNetDevice->GetMac());
-		Ptr<DataDcaTxop> apDataDca = apDataMac->m_dca;
-
-		Ptr<WifiNetDevice> apCtrlNetDevice = DynamicCast<WifiNetDevice>(
-				apCtrlDevContainer.Get(i));
-		Ptr<ApWifiMacCtrl> apCtrlMac = DynamicCast<ApWifiMacCtrl>(
-				apCtrlNetDevice->GetMac());
-		Ptr<CtrlDcaTxop> apCtrlDca = apCtrlMac->m_dca;
 
 		// data ssid
 		char strNumber[20] =
@@ -204,27 +154,6 @@ int main(int argc, char *argv[])
 		std::sprintf(strNumber, "%d", i);
 		std::string strDataSsid = SSID_DATA_PREFIX + strNumber;
 		apDataMac->SetSsid(Ssid(strDataSsid));
-
-		// ctrl ssid
-		std::string strCtrlSsid = SSID_CTRL_PREFIX + strNumber;
-		apCtrlMac->SetSsid(Ssid(strCtrlSsid));
-
-		// set callback for dataDcaTxop
-		apDataDca->SetSendByCtrlChannleCallback(
-				MakeCallback(&CtrlDcaTxop::SendByCtrlChannelImpl, apCtrlDca));
-
-		// set global information for dataDcaTxop
-		apDataDca->SetGlobalRtsSignal(&g_bGlobalFirstRts);
-
-		// set topology to dataDcaTxop
-		apDataDca->SetNodeContainer(&allNodes);
-
-		// set topology to ctrlDcaTxop
-		apCtrlDca->SetNodeContainer(&allNodes);
-
-		// set callback for ctrlDcaTxop
-		apCtrlDca->SetNotifyDataChannelCallback(
-				MakeCallback(&DataDcaTxop::NotifyDataChannelImpl, apDataDca));
 
 	}
 
@@ -287,19 +216,13 @@ int main(int argc, char *argv[])
 	Ipv4InterfaceContainer ipInterfaceContainerData = address.Assign(
 			staDataDevContainer);
 
-//	address.SetBase("192.168.7.0", "255.255.255.0");
-//	address.Assign(apCtrlDevContainer);
-//	Ipv4InterfaceContainer ipInterfaceContainerCtrl = address.Assign(
-//			staCtrlDevContainer);
-
 	// setup UDP server
-	LinUdpServerHelper srvHelper(nPort);
+	UdpServerHelper srvHelper(nPort);
 	ApplicationContainer srvApp;
 	for (uint32_t i = 0; i < staNodeContainer.GetN(); i = i + 2)
 	{
 		srvApp.Add(
-				srvHelper.Install(staNodeContainer.Get(i),
-						staDataDevContainer.Get(i)));
+				srvHelper.Install(staNodeContainer.Get(i) ) );
 		std::cout << "install svr on STA_" << i << std::endl;
 	}
 	srvApp.Start(Seconds(10.0));
@@ -309,14 +232,13 @@ int main(int argc, char *argv[])
 	ApplicationContainer clientApp;
 	for (uint32_t i = 1; i < staNodeContainer.GetN(); i = i + 2)
 	{
-		LinUdpClientHelper clientHelper(
+		UdpClientHelper clientHelper(
 				ipInterfaceContainerData.GetAddress(i - 1), nPort);
 		clientHelper.SetAttribute("MaxPackets", UintegerValue(nMaxPktCount));
 		clientHelper.SetAttribute("Interval", TimeValue(interPktInterval));
 		clientHelper.SetAttribute("PacketSize", UintegerValue(nMaxPktSize));
 		clientApp.Add(
-				clientHelper.Install(staNodeContainer.Get(i),
-						staDataDevContainer.Get(i)));
+				clientHelper.Install(staNodeContainer.Get(i) ) );
 
 		std::cout << "install client on STA_" << i << ", bind to svr on STA_"
 				<< i - 1 << std::endl;
@@ -349,14 +271,6 @@ int main(int argc, char *argv[])
 				<< std::endl;
 		std::cout << "data ip addr: " << ipInterfaceContainerData.GetAddress(i)
 				<< std::endl;
-		std::cout << "ctrl NetDevice addr: "
-				<< DynamicCast<WifiNetDevice>(staNode->GetDevice(1))->GetMac()->GetAddress()
-				<< std::endl;
-		std::cout << "ctrl ssid: "
-				<< DynamicCast<WifiNetDevice>(staNode->GetDevice(1))->GetMac()->GetSsid()
-				<< std::endl;
-//		std::cout << "ctrl ip addr: " << ipInterfaceContainerCtrl.GetAddress(i)
-//				<< std::endl;
 
 		// position
 		Ptr<MobilityModel> position = staNode->GetObject<MobilityModel>();
@@ -381,12 +295,6 @@ int main(int argc, char *argv[])
 				<< std::endl;
 		std::cout << "data ssid: "
 				<< DynamicCast<WifiNetDevice>(apNode->GetDevice(0))->GetMac()->GetSsid()
-				<< std::endl;
-		std::cout << "ctrl NetDevice addr: "
-				<< DynamicCast<WifiNetDevice>(apNode->GetDevice(1))->GetMac()->GetAddress()
-				<< std::endl;
-		std::cout << "ctrl ssid: "
-				<< DynamicCast<WifiNetDevice>(apNode->GetDevice(1))->GetMac()->GetSsid()
 				<< std::endl;
 
 		// position

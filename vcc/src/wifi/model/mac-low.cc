@@ -1356,6 +1356,9 @@ MacLow::SendDataPacket (void)
   StartDataTxTimers ();
 
   WifiMode dataTxMode = GetDataTxMode (m_currentPacket, &m_currentHdr);
+  NS_LOG_ERROR("data rate="<<dataTxMode.GetDataRate()
+		  <<", bandwidth="<<dataTxMode.GetBandwidth()
+		  <<", name="<<dataTxMode.GetUniqueName());
   Time duration = Seconds (0.0);
   if (m_txParams.HasDurationId ())
     {
