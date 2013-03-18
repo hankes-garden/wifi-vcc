@@ -117,6 +117,8 @@ public:
   */
   int64_t AssignStreams (int64_t stream);
 
+  Ptr<MacLow> Low (void);
+
 private:
   class TransmissionListener;
   class NavListener;
@@ -129,7 +131,7 @@ private:
   DcaTxop (const DcaTxop &o);
 
   // Inherited from ns3::Object
-  Ptr<MacLow> Low (void);
+
   void DoStart ();
   /* dcf notifications forwarded here */
   bool NeedsAccess (void) const;

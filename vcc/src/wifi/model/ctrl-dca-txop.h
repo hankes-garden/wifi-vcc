@@ -120,6 +120,8 @@ public:
   */
   int64_t AssignStreams (int64_t stream);
 
+  Ptr<MacLowCtrl> Low (void);
+
 
 private:
   class TransmissionListener;
@@ -133,7 +135,7 @@ private:
   CtrlDcaTxop (const CtrlDcaTxop &o);
 
   // Inherited from ns3::Object
-  Ptr<MacLowCtrl> Low (void);
+
   void DoStart ();
   /* dcf notifications forwarded here */
   bool NeedsAccess (void) const;

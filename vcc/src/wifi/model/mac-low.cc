@@ -1264,6 +1264,7 @@ MacLow::SendRtsForPacket (void)
   rts.SetAddr1 (m_currentHdr.GetAddr1 ());
   rts.SetAddr2 (m_self);
   WifiMode rtsTxMode = GetRtsTxMode (m_currentPacket, &m_currentHdr);
+//  NS_LOG_ERROR("rtsTxMode="<<rtsTxMode.GetUniqueName());
   Time duration = Seconds (0);
   if (m_txParams.HasDurationId ())
     {
@@ -1294,6 +1295,7 @@ MacLow::SendRtsForPacket (void)
   WifiMacTrailer fcs;
   packet->AddTrailer (fcs);
 
+  m_myRtsDuration = m_myRtsDuration + txDuration;
   ForwardDown (packet, &rts, rtsTxMode);
 }
 
@@ -1357,9 +1359,7 @@ MacLow::SendDataPacket (void)
   StartDataTxTimers ();
 
   WifiMode dataTxMode = GetDataTxMode (m_currentPacket, &m_currentHdr);
-  NS_LOG_ERROR("data rate="<<dataTxMode.GetDataRate()
-		  <<", bandwidth="<<dataTxMode.GetBandwidth()
-		  <<", name="<<dataTxMode.GetUniqueName());
+  NS_LOG_ERROR("dataTxMode="<<dataTxMode.GetUniqueName());
   Time duration = Seconds (0.0);
   if (m_txParams.HasDurationId ())
     {
@@ -1425,6 +1425,7 @@ MacLow::SendCtsAfterRts (Mac48Address source, Time duration, WifiMode rtsTxMode,
    * right after SIFS.
    */
   WifiMode ctsTxMode = GetCtsTxModeForRts (source, rtsTxMode);
+  NS_LOG_ERROR("ctsTxMode="<<ctsTxMode.GetUniqueName());
   WifiMacHeader cts;
   cts.SetType (WIFI_MAC_CTL_CTS);
   cts.SetDsNotFrom ();
@@ -1446,6 +1447,7 @@ MacLow::SendCtsAfterRts (Mac48Address source, Time duration, WifiMode rtsTxMode,
   tag.Set (rtsSnr);
   packet->AddPacketTag (tag);
 
+  m_myCtsDuration = m_myCtsDuration + GetCtsDuration (source, rtsTxMode);
   ForwardDown (packet, &cts, ctsTxMode);
 }
 
@@ -1460,6 +1462,7 @@ MacLow::SendDataAfterCts (Mac48Address source, Time duration, WifiMode txMode)
   StartDataTxTimers ();
 
   WifiMode dataTxMode = GetDataTxMode (m_currentPacket, &m_currentHdr);
+  NS_LOG_ERROR("dataTxMode af.Cts="<<dataTxMode.GetUniqueName());
   Time newDuration = Seconds (0);
   newDuration += GetSifs ();
   newDuration += GetAckDuration (m_currentHdr.GetAddr1 (), dataTxMode);

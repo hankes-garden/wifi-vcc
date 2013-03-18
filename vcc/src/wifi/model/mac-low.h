@@ -697,6 +697,9 @@ public:
 
   Time m_myLastTxStart;
   Time m_myLastTxDuration;
+
+  Time m_myRtsDuration;
+  Time m_myCtsDuration;
 };
 
 } // namespace ns3

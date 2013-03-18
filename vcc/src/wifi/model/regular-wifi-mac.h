@@ -228,9 +228,6 @@ protected:
 
   Ssid m_ssid;
 
-  /** This holds a pointer to the DCF instance for this WifiMac - used
-  for transmission of frames to non-QoS peers. */
-  Ptr<DcaTxop> m_dca;
 
   /** This type defines a mapping between an Access Category index,
   and a pointer to the corresponding channel access function */
@@ -347,6 +344,11 @@ private:
 
   TracedCallback<const WifiMacHeader &> m_txOkCallback;
   TracedCallback<const WifiMacHeader &> m_txErrCallback;
+
+public:
+  /** This holds a pointer to the DCF instance for this WifiMac - used
+  for transmission of frames to non-QoS peers. */
+  Ptr<DcaTxop> m_dca;
 };
 
 } // namespace ns3
