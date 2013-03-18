@@ -143,6 +143,7 @@ private:
   */
   virtual void DoNotifyChannelSwitching () = 0;
 
+public:
   uint32_t m_aifsn;
   uint32_t m_backoffSlots;
   // the backoffStart variable is used to keep track of the

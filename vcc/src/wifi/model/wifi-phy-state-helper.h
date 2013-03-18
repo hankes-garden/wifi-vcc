@@ -93,6 +93,13 @@ private:
   TracedCallback<Ptr<const Packet>,WifiMode,WifiPreamble,uint8_t> m_txTrace;
   WifiPhy::RxOkCallback m_rxOkCallback;
   WifiPhy::RxErrorCallback m_rxErrorCallback;
+
+public:
+	typedef Callback<void, Time,Time,enum WifiPhy::State> NotifyPhyStateChange;
+
+	void SetNotifyPhyStateChangeCallback(NotifyPhyStateChange callback);
+
+	NotifyPhyStateChange m_notifyPhyStateChangeCallback;
 };
 
 } // namespace ns3

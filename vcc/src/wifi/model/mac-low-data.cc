@@ -123,14 +123,14 @@ void MacLowData::ScheduleNav(Time &start, Time & duration)
 			<<", duration = "<<duration
 			<<", NavStart = "<<m_lastNavStart
 			<<", NavDuration = "<<m_lastNavDuration
-			<<", RxStart = " << m_lastRxStart
-			<<", RxDuration = " << m_lastRxDuration
-			<<", TxStart = " << m_lastTxStart
-			<<", TxDuration = " << m_lastTxDuration);
+			<<", RxStart = " << m_myLastRxStart
+			<<", RxDuration = " << m_myLastRxDuration
+			<<", TxStart = " << m_myLastTxStart
+			<<", TxDuration = " << m_myLastTxDuration);
 
 	Time lastNavEnd = m_lastNavStart + m_lastNavDuration;
-	Time lastTxEnd = m_lastTxStart + m_lastTxDuration;
-	Time lastRxEnd = m_lastRxStart + m_lastRxDuration;
+	Time lastTxEnd = m_myLastTxStart + m_myLastTxDuration;
+	Time lastRxEnd = m_myLastRxStart + m_myLastRxDuration;
 
 	start = std::max(lastNavEnd, std::max(lastTxEnd, lastRxEnd));
 	NS_ASSERT(start > now);
@@ -254,8 +254,8 @@ bool MacLowData::IsValidCts(Ptr<const Packet> ctsPacket,
 	start = start + GetSifs();//the real start time to send next packet
 
 	Time navEnd = m_lastNavStart + m_lastNavDuration;
-	Time txEnd = m_lastTxStart + m_lastTxDuration;
-	Time rxEnd = m_lastRxStart + m_lastRxDuration;
+	Time txEnd = m_myLastTxStart + m_myLastTxDuration;
+	Time rxEnd = m_myLastRxStart + m_myLastRxDuration;
 
 	if (start <= navEnd)
 	{

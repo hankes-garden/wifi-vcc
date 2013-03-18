@@ -190,6 +190,7 @@ void MacLowCtrl::NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const 
 				(hdr.IsRts() ? "Rxing Rts" : "Rxing Cts")
 				<<", dst="<<hdr.GetAddr1()
 				<<", src="<<hdr.GetAddr2()
+				<<", rxing duration="<<rxDuration
 					);
 	}
 }

@@ -403,6 +403,11 @@ DcfManager::RequestAccess (DcfState *state)
       && IsBusy ())
     {
       MY_DEBUG ("medium is busy: collision");
+      NS_LOG_ERROR ("BUSY: rxEnd = "<< m_lastRxStart + m_lastRxDuration
+    		  <<", rxStart="<<m_lastRxStart
+    		  <<", rxDuration="<<m_lastRxDuration
+    		  <<", TxEnd="<<m_lastTxStart+m_lastTxDuration
+    		  <<", NavEnd="<<m_lastNavStart+m_lastNavDuration);
       /* someone else has accessed the medium.
        * generate a backoff.
        */

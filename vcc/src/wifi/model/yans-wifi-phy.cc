@@ -133,6 +133,9 @@ YansWifiPhy::YansWifiPhy ()
   NS_LOG_FUNCTION (this);
   m_random = CreateObject<UniformRandomVariable> ();
   m_state = CreateObject<WifiPhyStateHelper> ();
+  m_state->SetNotifyPhyStateChangeCallback(
+		  MakeCallback(&YansWifiPhy::NotifyPhyStateChange, this)
+		  );
 }
 
 YansWifiPhy::~YansWifiPhy ()
@@ -474,7 +477,7 @@ YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
         }
       else
         {
-          NS_LOG_DEBUG ("drop packet because signal power too Small (" <<
+          NS_LOG_ERROR ("drop packet because signal power too Small (" <<
                         rxPowerW << "<" << m_edThresholdW << ")");
           NotifyRxDrop (packet);
           goto maybeCcaBusy;
@@ -807,4 +810,18 @@ YansWifiPhy::AssignStreams (int64_t stream)
   m_random->SetStream (stream);
   return 1;
 }
+
+void YansWifiPhy::NotifyPhyStateChange(Time start, Time duration, enum WifiPhy::State state)
+{
+	if(state == WifiPhy::IDLE)
+	{
+		m_cumulateIdleTime += duration;
+	}
+	else if(state == WifiPhy::RX && duration >= Time(180000))//this is a end of data packet rxing
+	{
+		m_lastDataPacketRxTime = start + duration;
+		m_lastCumulateIdleTime = m_cumulateIdleTime;
+	}
+}
+
 } // namespace ns3

@@ -692,11 +692,11 @@ public:
   virtual void NotifyTxStartNow(Time duration, WifiMacHeader hdr);
 
 public:
-  Time m_lastRxStart;
-  Time m_lastRxDuration;
+  Time m_myLastRxStart;
+  Time m_myLastRxDuration;
 
-  Time m_lastTxStart;
-  Time m_lastTxDuration;
+  Time m_myLastTxStart;
+  Time m_myLastTxDuration;
 };
 
 } // namespace ns3

@@ -37,6 +37,7 @@
 #include "mac-low.h"
 #include "amsdu-subframe-header.h"
 #include "msdu-aggregator.h"
+#include "ns3/constant-rate-wifi-manager.h"
 
 NS_LOG_COMPONENT_DEFINE("ApWifiMacCtrl");
 

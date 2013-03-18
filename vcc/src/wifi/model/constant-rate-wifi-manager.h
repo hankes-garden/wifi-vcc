@@ -56,7 +56,7 @@ private:
   virtual WifiMode DoGetDataMode (WifiRemoteStation *station, uint32_t size);
   virtual WifiMode DoGetRtsMode (WifiRemoteStation *station);
   virtual bool IsLowLatency (void) const;
-
+public:
   WifiMode m_dataMode;
   WifiMode m_ctlMode;
 };

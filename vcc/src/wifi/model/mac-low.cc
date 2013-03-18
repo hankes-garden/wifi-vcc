@@ -33,6 +33,7 @@
 #include "wifi-mac-trailer.h"
 #include "qos-utils.h"
 #include "edca-txop-n.h"
+#include "ns3/constant-rate-wifi-manager.h"
 
 NS_LOG_COMPONENT_DEFINE ("MacLow");
 
@@ -1846,14 +1847,14 @@ MacLow::RegisterBlockAckListenerForAc (enum AcIndex ac, MacLowBlockAckEventListe
 
 void MacLow::NotifyRxStartNow(Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
 {
-	m_lastRxStart = Simulator::Now();
-	m_lastRxDuration = rxDuration + hdr.GetDuration();
+	m_myLastRxStart = Simulator::Now();
+	m_myLastRxDuration = rxDuration + hdr.GetDuration();
 }
 
 void MacLow::NotifyTxStartNow(Time duration, WifiMacHeader hdr)
 {
-	m_lastTxStart = Simulator::Now();
-	m_lastTxDuration = duration + hdr.GetDuration();
+	m_myLastTxStart = Simulator::Now();
+	m_myLastTxDuration = duration + hdr.GetDuration();
 }
 
 } // namespace ns3

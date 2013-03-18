@@ -673,7 +673,7 @@ void DataDcaTxop::RequestAccessByCtrlChannel(Ptr<const Packet> packet,
 
 	*m_pbGlobalFirstRts = false;
 	// reset global RTS signal after this rxing
-	Time firtRtsResetDelay = m_low->m_lastRxStart + m_low->m_lastRxDuration - Simulator::Now();
+	Time firtRtsResetDelay = m_low->m_myLastRxStart + m_low->m_myLastRxDuration - Simulator::Now();
 	NS_ASSERT(firtRtsResetDelay.IsStrictlyPositive() );
 	Simulator::Cancel(m_firtRtsReset);
 	m_firtRtsReset = Simulator::Schedule(firtRtsResetDelay,
@@ -871,14 +871,14 @@ void DataDcaTxop::NotifyRxStart(Time rxDuration, WifiMacHeader hdr, Ptr<const Pa
 {
 	// the current on-air packet is data and long enough, send an Rts
 	// on ctrl channel if needed
-	if (hdr.IsData() && rxDuration > 1400000 )
+	if (hdr.IsData() && rxDuration > Time(180000) )
 	{
 		NS_LOG_ERROR("start Rx data, src="<<hdr.GetAddr2()
 				<< ", dst="<<hdr.GetAddr1()
 				<< ", uid="<<packet->GetUid()
 				<< ", size="<<packet->GetSize()
 				<<", duration="<<rxDuration);
-		Time delay = NanoSeconds(100); // wait for a while to make sure every node has began to receive current on-air packet
+		Time delay = NanoSeconds(20); // wait for a while to make sure every node has began to receive current on-air packet
 		Simulator::Schedule(delay, &DataDcaTxop::SendRtsOnCtrlChannelIfNeeded,
 				this, rxDuration, hdr);
 	}
@@ -889,7 +889,7 @@ void DataDcaTxop::NotifyTxStart(Time duration, WifiMacHeader hdr)
 {
 	// We do not consider a node transmits data and control simultaneously
 	// so, we don't do anything here
-	if (hdr.IsData() && duration > Time(1000000))
+	if (hdr.IsData() && duration > Time(180000))
 	{
 		NS_LOG_ERROR("start Tx data, src="<<hdr.GetAddr2()
 				<< ", dst="<<hdr.GetAddr1()
@@ -900,8 +900,6 @@ void DataDcaTxop::NotifyTxStart(Time duration, WifiMacHeader hdr)
 void DataDcaTxop::SendRtsOnCtrlChannelIfNeeded(Time duration,
 		WifiMacHeader onAirHdr)
 {
-	NS_LOG_ERROR("Check whether to send RTS for next packet");
-
 	// check whether to send RTS on ctrl channel
 	if (m_queue->IsEmpty())
 	{

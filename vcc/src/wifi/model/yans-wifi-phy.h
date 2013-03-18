@@ -229,6 +229,13 @@ private:
   InterferenceHelper m_interference;
   Time m_channelSwitchDelay;
 
+public:
+  Time m_cumulateIdleTime;
+  Time m_lastDataPacketRxTime;
+  Time m_lastCumulateIdleTime;
+
+  void NotifyPhyStateChange(Time start, Time duration, enum WifiPhy::State state);
+
 };
 
 } // namespace ns3
