@@ -58,7 +58,7 @@ GlobalValue g_schedTypeImpl = GlobalValue ("SchedulerType",
 static void
 TimePrinter (std::ostream &os)
 {
-  os << Simulator::Now ().GetSeconds () << "s";
+  os << Simulator::Now ().GetNanoSeconds() << "ns";
 }
 
 static void

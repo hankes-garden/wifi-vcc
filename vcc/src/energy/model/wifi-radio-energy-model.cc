@@ -333,7 +333,7 @@ WifiRadioEnergyModelPhyListener::SetChangeStateCallback (DeviceEnergyModel::Chan
 }
 
 void
-WifiRadioEnergyModelPhyListener::NotifyRxStart (Time duration)
+WifiRadioEnergyModelPhyListener::NotifyRxStart (Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet)
 {
   if (m_changeStateCallback.IsNull ())
     {
@@ -364,7 +364,7 @@ WifiRadioEnergyModelPhyListener::NotifyRxEndError (void)
 }
 
 void
-WifiRadioEnergyModelPhyListener::NotifyTxStart (Time duration)
+WifiRadioEnergyModelPhyListener::NotifyTxStart (Time duration, WifiMacHeader hdr)
 {
   if (m_changeStateCallback.IsNull ())
     {

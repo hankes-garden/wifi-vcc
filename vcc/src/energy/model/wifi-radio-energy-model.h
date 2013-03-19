@@ -55,7 +55,7 @@ public:
    *
    * Defined in ns3::WifiPhyListener
    */
-  virtual void NotifyRxStart (Time duration);
+  virtual void NotifyRxStart (Time rxDuration, WifiMacHeader hdr, Ptr<const Packet> packet);
 
   /**
    * \brief Switches the WifiRadioEnergyModel back to IDLE state.
@@ -85,7 +85,7 @@ public:
    *
    * Defined in ns3::WifiPhyListener
    */
-  virtual void NotifyTxStart (Time duration);
+  virtual void NotifyTxStart (Time duration, WifiMacHeader hdr);
 
   /**
    * \param duration the expected busy duration.
